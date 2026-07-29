@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>project-trucha · Qué construimos y qué decidimos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg:#0B0F12; --panel:#14181C; --ink:#EAF2F0; --muted:#8DA0A6;
+    --teal:#06C69C; --teal2:#02ECB6; --navy:#14315F; --line:#22303a;
+    --blue1:#9EC6EC; --blue2:#5B9BD5; --blue3:#2E6DB4; --blue4:#143A7E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    overflow:hidden;
+  }
+  .deck{position:fixed;inset:0}
+  .slide{
+    position:absolute;inset:0;display:none;
+    padding:6vh 8vw 12vh; flex-direction:column;justify-content:center;
+    opacity:0;transition:opacity .45s ease;
+  }
+  .slide.active{display:flex;opacity:1}
+  .kicker{
+    font-family:'JetBrains Mono',monospace;font-size:.8rem;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--teal);margin-bottom:1.2rem;
+  }
+  h1{font-size:clamp(2.2rem,6vw,4.6rem);line-height:1.02;font-weight:700;letter-spacing:-.02em}
+  h2{font-size:clamp(1.7rem,4.2vw,3rem);line-height:1.05;font-weight:700;letter-spacing:-.01em;margin-bottom:1.6rem}
+  h1 .accent, h2 .accent{color:var(--teal)}
+  p.lead{font-size:clamp(1.05rem,2vw,1.5rem);color:var(--muted);max-width:60ch;margin-top:1.4rem;line-height:1.5}
+  ul{list-style:none;margin-top:.5rem}
+  li{font-size:clamp(1rem,1.7vw,1.35rem);padding:.55rem 0;padding-left:1.8rem;position:relative;color:var(--ink);max-width:70ch}
+  li::before{content:"";position:absolute;left:0;top:1.15rem;width:.7rem;height:.7rem;border-radius:2px;background:var(--teal);transform:rotate(45deg)}
+  li small{display:block;color:var(--muted);font-size:.9rem;padding-left:0;margin-top:.15rem}
+  .grid{display:grid;gap:1rem;margin-top:1.4rem}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
+  .card h3{font-size:1.1rem;color:var(--teal2);margin-bottom:.4rem;font-weight:700}
+  .card p{color:var(--muted);font-size:.98rem;line-height:1.45}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .pipeline{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-top:1.8rem;font-family:'JetBrains Mono',monospace}
+  .node{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;font-size:1rem}
+  .node b{color:var(--teal2)}
+  .arrow{color:var(--teal);font-size:1.3rem}
+  table{border-collapse:collapse;margin-top:1.4rem;width:100%;font-size:clamp(.72rem,1.15vw,.95rem)}
+  th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left}
+  th{background:#101519;color:var(--teal2);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.78rem;letter-spacing:.04em}
+  tr.win td{background:rgba(6,198,156,.08)}
+  td .yes{color:var(--teal2)} td .no{color:#e06a6a} td .mid{color:#d8b24a}
+  .tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.1em;
+    border:1px solid var(--teal);color:var(--teal);border-radius:999px;padding:.2rem .7rem;margin-top:1rem}
+  .authors{margin-top:2.2rem;font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:.95rem}
+  .authors b{color:var(--ink)}
+  /* waves */
+  .waves{position:fixed;left:0;right:0;bottom:0;height:22vh;z-index:-1;opacity:.9}
+  /* logo */
+  .logo{width:120px;height:120px;margin-bottom:1.5rem}
+  /* nav */
+  .nav{position:fixed;bottom:3.2vh;right:3vw;display:flex;gap:.6rem;align-items:center;z-index:10}
+  .nav button{background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    width:44px;height:44px;border-radius:10px;font-size:1.2rem;cursor:pointer;transition:.2s}
+  .nav button:hover{border-color:var(--teal);color:var(--teal)}
+  .dots{position:fixed;bottom:3.9vh;left:50%;transform:translateX(-50%);display:flex;gap:.5rem;z-index:10}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--line);cursor:pointer;transition:.2s}
+  .dot.active{background:var(--teal);width:26px;border-radius:6px}
+  .counter{position:fixed;bottom:3.9vh;left:3vw;font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:.85rem;z-index:10}
+  .counter b{color:var(--teal)}
+  .brandbar{position:fixed;top:3.2vh;left:3vw;font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;z-index:10}
+  .brandbar .fish{color:var(--teal)}
+  @media(max-width:720px){.cols-2,.cols-3{grid-template-columns:1fr}.slide{padding:8vh 7vw 14vh}}
+</style>
+</head>
+<body>
+
+<div class="brandbar"><span class="fish">🐟</span> project-trucha</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 · Portada -->
+  <section class="slide active">
+    <svg class="logo" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+      <path d="M240,150 C216,127 202,117 202,101 C202,90 211,83 221,83 C229,83 236,87 240,94 C244,87 251,83 259,83 C269,83 278,90 278,101 C278,117 264,127 240,150 Z" fill="#06C69C"/>
+      <g transform="translate(150,168)" fill="#EAF2F0"><path d="M14,20 C14,9 35,5 56,8 C70,10 79,15 84,20 C79,25 70,30 56,32 C35,36 14,31 14,20 Z"/><path d="M14,20 L1,10 L7,20 L1,30 Z"/><circle cx="72" cy="16" r="2.3" fill="#0B0F12"/></g>
+      <g transform="translate(330,168) scale(-1,1)" fill="#EAF2F0"><path d="M14,20 C14,9 35,5 56,8 C70,10 79,15 84,20 C79,25 70,30 56,32 C35,36 14,31 14,20 Z"/><path d="M14,20 L1,10 L7,20 L1,30 Z"/><circle cx="72" cy="16" r="2.3" fill="#0B0F12"/></g>
+      <path d="M60,250 C120,236 175,266 240,252 C305,238 360,268 420,250 L420,330 L60,330 Z" fill="#5B9BD5" opacity=".5"/>
+      <path d="M60,272 C120,258 175,288 240,274 C305,260 360,290 420,272 L420,330 L60,330 Z" fill="#2E6DB4" opacity=".55"/>
+    </svg>
+    <div class="kicker">Etapa de decisión técnica · 2026</div>
+    <h1>project<span class="accent">-trucha</span></h1>
+    <p class="lead">Un toolkit colaborativo y open source para dar a los agentes de código <b style="color:var(--ink)">memoria persistente</b> sobre un codebase local. Esto es qué vamos a construir y qué decisiones vamos a tomar.</p>
+    <div class="authors">Hecho con 🐟 por <b>Maximiliano Soria</b>, <b>Gerardo</b> y <b>Gerald</b> 🤖</div>
+  </section>
+
+  <!-- 2 · El problema -->
+  <section class="slide">
+    <div class="kicker">01 · El problema</div>
+    <h2>Un agente sin memoria <span class="accent">arranca de cero</span></h2>
+    <div class="grid cols-3">
+      <div class="card"><h3>Cada sesión reindexa</h3><p>Vuelve a escanear el repo entero para responder lo que ya sabía ayer.</p></div>
+      <div class="card"><h3>Pierde el contexto</h3><p>Las decisiones, convenciones y notas de sesiones previas se evaporan.</p></div>
+      <div class="card"><h3>O paga la nube</h3><p>La alternativa habitual es una base vectorial pesada, con latencia de red y estado propio.</p></div>
+    </div>
+    <p class="lead">Necesitamos memoria <b style="color:var(--ink)">local, rápida y portable</b> que el agente pueda consultar en milisegundos.</p>
+  </section>
+
+  <!-- 3 · Qué construimos -->
+  <section class="slide">
+    <div class="kicker">02 · Qué vamos a construir</div>
+    <h2>Un índice persistente del codebase, <span class="accent">consultable por el agente</span></h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Indexado del repo</h3><p>Recorrer, trocear (por archivo / símbolo / bloque) y persistir el contenido.</p></div>
+      <div class="card"><h3>Búsqueda híbrida</h3><p>Léxica (BM25, exacta) + semántica (vectorial) fusionadas en una sola respuesta.</p></div>
+      <div class="card"><h3>Memoria de decisiones</h3><p>Guardar notas y ADRs asociados al código y recuperarlos por contexto.</p></div>
+      <div class="card"><h3>Reindex incremental</h3><p>Detectar cambios por hash / mtime y actualizar sólo lo que cambió.</p></div>
+      <div class="card"><h3>Interfaz para agentes</h3><p>CLI + API y, más adelante, un servidor MCP para consumo directo.</p></div>
+      <div class="card"><h3>Local-first</h3><p>Todo en la máquina del dev: <span class="mono">pip install</span> y listo, sin servicios obligatorios.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · Arquitectura -->
+  <section class="slide">
+    <div class="kicker">03 · Arquitectura tentativa</div>
+    <h2>Un <span class="accent">pipeline</span> con la persistencia desacoplada</h2>
+    <div class="pipeline">
+      <span class="node"><b>ingest</b></span><span class="arrow">→</span>
+      <span class="node"><b>embed</b></span><span class="arrow">→</span>
+      <span class="node"><b>store</b> ⟵ decisión</span><span class="arrow">→</span>
+      <span class="node"><b>retrieve</b></span><span class="arrow">→</span>
+      <span class="node"><b>interface</b></span>
+    </div>
+    <p class="lead">Las capas dependen de <b style="color:var(--ink)">store</b> a través de una interfaz estable, no de una implementación concreta. Así podemos comparar (y hasta cambiar) el backend sin reescribir el resto mientras la decisión sigue abierta.</p>
+    <span class="tag">CONTRATO ESTABLE = DECISIÓN REVERSIBLE</span>
+  </section>
+
+  <!-- 5 · Filosofía -->
+  <section class="slide">
+    <div class="kicker">04 · Filosofía</div>
+    <h2>Por qué <span class="accent">la trucha</span></h2>
+    <ul>
+      <li><b>Nada contracorriente.</b><small>Local-first, contra el reflejo de "todo a la nube".</small></li>
+      <li><b>Vive en aguas claras.</b><small>Bioindicador: el índice refleja la salud real del codebase; contexto limpio y fresco.</small></li>
+      <li><b>Tiene memoria de retorno.</b><small>El agente "vuelve a casa" al contexto acumulado en vez de empezar de cero.</small></li>
+      <li><b>Ágil y liviana.</b><small>Baja fricción, baja latencia: entra y sale del bucle del agente en milisegundos.</small></li>
+      <li><b>Quiere a su trucho.</b><small>Proyecto colaborativo — se construye de a muchos.</small></li>
+    </ul>
+  </section>
+
+  <!-- 6 · Decisión #1 -->
+  <section class="slide">
+    <div class="kicker">05 · Decisión técnica #1 · ABIERTA</div>
+    <h2>¿Qué <span class="accent">backend de memoria</span>?</h2>
+    <table>
+      <thead><tr><th>Opción</th><th>Fricción</th><th>Léxica</th><th>Vectorial</th><th>Portable</th><th>Escala</th></tr></thead>
+      <tbody>
+        <tr class="win"><td><b>SQLite + FTS5</b></td><td>Muy baja</td><td class="yes">✔ BM25</td><td class="no">✘</td><td class="yes">✔ 1 archivo</td><td class="mid">Media</td></tr>
+        <tr class="win"><td><b>SQLite + FTS5 + sqlite-vec</b></td><td>Baja</td><td class="yes">✔ BM25</td><td class="yes">✔ KNN</td><td class="yes">✔ 1 archivo</td><td class="mid">Media</td></tr>
+        <tr><td>LanceDB</td><td>Baja</td><td class="mid">~</td><td class="yes">✔ rápida</td><td class="yes">✔</td><td class="yes">Alta</td></tr>
+        <tr><td>ChromaDB</td><td>Media</td><td class="mid">~</td><td class="yes">✔</td><td class="mid">~</td><td class="yes">Alta</td></tr>
+        <tr><td>pgvector (Postgres)</td><td>Alta</td><td class="yes">✔</td><td class="yes">✔</td><td class="no">✘ servidor</td><td class="yes">Muy alta</td></tr>
+        <tr><td>Qdrant / vector DB</td><td>Alta</td><td class="mid">~</td><td class="yes">✔ avanzada</td><td class="no">✘ servicio</td><td class="yes">Muy alta</td></tr>
+      </tbody>
+    </table>
+    <p class="lead" style="margin-top:1rem">Hipótesis a validar: <b style="color:var(--teal2)">SQLite + FTS5 (+ sqlite-vec)</b> para el caso local. Vector DB dedicada se justifica a escala multi-tenant / millones de docs.</p>
+  </section>
+
+  <!-- 7 · Otras decisiones -->
+  <section class="slide">
+    <div class="kicker">06 · Otras decisiones a tomar</div>
+    <h2>El mapa de <span class="accent">decisiones</span> por delante</h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Estrategia de chunking</h3><p>¿Por archivo, por símbolo (AST) o por bloque de tokens? Impacta recall y costo.</p></div>
+      <div class="card"><h3>Modelo de embeddings</h3><p>Local vs API; dimensión, costo, calidad. ¿Configurable / pluggable?</p></div>
+      <div class="card"><h3>Ranking híbrido</h3><p>Cómo fusionar léxico + vectorial (p. ej. reciprocal rank fusion) y sus pesos.</p></div>
+      <div class="card"><h3>Reindex incremental</h3><p>Hash vs mtime; granularidad y disparadores del re-scan.</p></div>
+      <div class="card"><h3>Interfaz / protocolo</h3><p>CLI, API y servidor MCP: qué contrato exponemos al agente.</p></div>
+      <div class="card"><h3>Umbral de escala</h3><p>A partir de qué volumen conviene migrar a un backend con servidor.</p></div>
+    </div>
+    <span class="tag">CADA DECISIÓN CERRADA → UN ADR EN docs/adr/</span>
+  </section>
+
+  <!-- 8 · Roadmap -->
+  <section class="slide">
+    <div class="kicker">07 · Roadmap</div>
+    <h2>De la <span class="accent">decisión</span> al toolkit</h2>
+    <ul>
+      <li><b>Fase 0 — Decisión</b> <small>(actual) Cerrar el backend (ADR-0001) y congelar la interfaz de <span class="mono">store</span>.</small></li>
+      <li><b>Fase 1 — Núcleo</b> <small>Indexado + búsqueda léxica + reindex incremental.</small></li>
+      <li><b>Fase 2 — Semántica</b> <small>Embeddings + búsqueda vectorial + fusión híbrida.</small></li>
+      <li><b>Fase 3 — Memoria de decisiones</b> <small>Persistir y recuperar notas / ADRs por contexto.</small></li>
+      <li><b>Fase 4 — Interfaz para agentes</b> <small>CLI estable + servidor MCP.</small></li>
+      <li><b>Fase 5 — Escala</b> <small>Camino de migración a backend con servidor.</small></li>
+    </ul>
+  </section>
+
+  <!-- 9 · Cierre -->
+  <section class="slide">
+    <div class="kicker">08 · Sumate</div>
+    <h2>Se construye <span class="accent">de a muchos</span></h2>
+    <p class="lead">El aporte más valioso hoy es participar en la decisión de arquitectura. Si tenés experiencia con alguno de los backends, tu input sobre trade-offs reales es bienvenido.</p>
+    <div class="grid cols-3" style="margin-top:1.8rem">
+      <div class="card"><h3>1 · Discutí</h3><p>Abrí un issue o un ADR antes de codear cambios grandes.</p></div>
+      <div class="card"><h3>2 · Rama + PR</h3><p>Conventional Commits, PR contra <span class="mono">main</span>.</p></div>
+      <div class="card"><h3>3 · Decidí</h3><p>Ayudanos a cerrar ADR-0001: el backend de memoria.</p></div>
+    </div>
+    <div class="authors">🐟 <b>Maximiliano Soria</b> · <b>Gerardo</b> · <b>Gerald</b> — <span class="mono">local, claro, con memoria y en comunidad</span></div>
+  </section>
+
+</div>
+
+<svg class="waves" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0,90 C240,50 420,120 720,85 C1020,50 1200,120 1440,80 L1440,220 L0,220 Z" fill="#143A7E" opacity=".28"/>
+  <path d="M0,130 C240,95 420,160 720,128 C1020,95 1200,160 1440,122 L1440,220 L0,220 Z" fill="#2E6DB4" opacity=".30"/>
+  <path d="M0,170 C240,140 420,198 720,168 C1020,140 1200,198 1440,164 L1440,220 L0,220 Z" fill="#06C69C" opacity=".18"/>
+</svg>
+
+<div class="counter"><b id="cur">01</b> / <span id="tot">09</span></div>
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button id="prev" aria-label="Anterior">‹</button>
+  <button id="next" aria-label="Siguiente">›</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const cur = document.getElementById('cur');
+  const tot = document.getElementById('tot');
+  let i = 0;
+  tot.textContent = String(slides.length).padStart(2,'0');
+
+  slides.forEach((_,idx)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx===0?' active':'');
+    d.addEventListener('click',()=>go(idx));
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function go(n){
+    i = Math.max(0, Math.min(slides.length-1, n));
+    slides.forEach((s,idx)=>s.classList.toggle('active', idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active', idx===i));
+    cur.textContent = String(i+1).padStart(2,'0');
+  }
+  document.getElementById('next').addEventListener('click',()=>go(i+1));
+  document.getElementById('prev').addEventListener('click',()=>go(i-1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  // swipe (touch)
+  let x0=null;
+  document.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(x0===null)return; const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>50){ dx<0?go(i+1):go(i-1); } x0=null;
+  },{passive:true});
+</script>
+</body>
+</html>
