@@ -9,6 +9,7 @@
   <a href="#"><img src="https://img.shields.io/badge/storage-SQLite_+_FTS5-003B57?logo=sqlite&logoColor=white" alt="SQLite FTS5"></a>
   <a href="#"><img src="https://img.shields.io/badge/b%C3%BAsqueda-h%C3%ADbrida_(l%C3%A9xica_+_vectorial)-06C69C" alt="Búsqueda híbrida"></a>
   <a href="#"><img src="https://img.shields.io/badge/licencia-MIT-brightgreen" alt="MIT"></a>
+  <a href="docs/slides/index.html"><img src="https://img.shields.io/badge/deck-slides-06C69C?logo=html5&logoColor=white" alt="Deck de slides"></a>
   <a href="#"><img src="https://img.shields.io/badge/contribuciones-bienvenidas-02ECB6" alt="Contribuciones"></a>
 </p>
 
@@ -19,6 +20,8 @@
 Toolkit colaborativo y open source para dotar a los agentes de código de **memoria persistente** sobre un codebase local: indexar, recordar y recuperar contexto de un repositorio sin depender de infraestructura pesada.
 
 > **Estado:** en etapa de decisión técnica. La arquitectura de almacenamiento todavía está abierta — ver [Decisión técnica: backend de memoria](#decisión-técnica-backend-de-memoria). Este README documenta la intención del proyecto y las opciones bajo evaluación, no un diseño cerrado.
+
+> 📊 **Deck de presentación:** abrí [`docs/slides/index.html`](docs/slides/index.html) en el navegador para un recorrido navegable (← →) por qué vamos a construir y las decisiones técnicas — con diagramas de flujo animados. También disponible como artifact en Cowork.
 
 ---
 
