@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>project-trucha · memoria persistente para agentes de código</title>
+<meta name="description" content="Toolkit colaborativo y local-first de memoria persistente para agentes de código: búsqueda híbrida sobre SQLite/FTS5, sin infraestructura pesada.">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F12;--panel:#14181C;--ink:#EAF2F0;--muted:#8DA0A6;--faint:#5B7086;
+    --teal:#06C69C;--teal2:#02ECB6;--navy:#14315F;--line:#22303a;
+    --blue2:#5B9BD5;--blue3:#2E6DB4;--blue4:#143A7E;
+    --sans:'Space Grotesk',Inter,system-ui,sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1100px 560px at 82% -8%,#0d1a15 0%,var(--bg) 55%);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  a{color:var(--teal2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .mono{font-family:var(--mono)}
+
+  header{text-align:center;padding:64px 0 40px;position:relative}
+  header img.logo{width:150px;height:150px}
+  .kicker{font-family:var(--mono);font-size:.78rem;letter-spacing:.28em;text-transform:uppercase;color:var(--teal);margin:14px 0 6px}
+  h1{font-family:var(--sans);font-size:clamp(2.2rem,6vw,3.6rem);font-weight:700;letter-spacing:-.02em;line-height:1.02}
+  h1 .a{color:var(--teal)}
+  .tag{color:var(--muted);font-size:clamp(1rem,2vw,1.25rem);max-width:60ch;margin:16px auto 0}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
+  .badge{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:5px 12px;background:var(--panel)}
+  .cta{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:26px}
+  .btn{font-family:var(--sans);font-weight:700;font-size:.98rem;padding:12px 22px;border-radius:12px;border:1px solid var(--line);display:inline-flex;align-items:center;gap:9px;transition:.15s}
+  .btn.primary{background:linear-gradient(135deg,var(--teal2),var(--teal));color:#06120c;border-color:transparent}
+  .btn.primary:hover{filter:brightness(1.07);text-decoration:none}
+  .btn.ghost{background:var(--panel);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--teal);color:var(--teal);text-decoration:none}
+
+  section{padding:34px 0;border-top:1px solid var(--line)}
+  h2{font-family:var(--sans);font-size:1.5rem;font-weight:700;margin-bottom:14px}
+  h2 .a{color:var(--teal)}
+  p.lead{color:var(--muted);max-width:70ch}
+  .grid{display:grid;gap:14px;margin-top:16px}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card h3{font-family:var(--sans);color:var(--teal2);font-size:1.05rem;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:.95rem}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:.9rem}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left}
+  th{font-family:var(--mono);font-size:.74rem;letter-spacing:.05em;color:var(--teal2);background:#101519}
+  tr.win td{background:rgba(6,198,156,.08)}
+  .tag-open{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;border:1px solid #d8b24a;color:#e6c65a;border-radius:999px;padding:3px 11px;margin-left:8px;vertical-align:middle}
+
+  .team{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;margin-top:18px}
+  .member{text-align:center;width:180px}
+  .member img{width:120px;height:120px;border-radius:50%}
+  .member .n{font-family:var(--sans);font-weight:700;margin-top:10px}
+  .member .r{color:var(--muted);font-size:.85rem}
+
+  footer{text-align:center;color:var(--faint);font-size:.86rem;padding:34px 0 60px;border-top:1px solid var(--line)}
+  footer .fish{color:var(--teal)}
+  .waves{width:100%;height:120px;display:block;margin-top:24px}
+  @media(max-width:720px){.cols-3,.cols-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <img class="logo" src="img/logo.svg" alt="project-trucha">
+    <div class="kicker">Etapa de decisión técnica · 2026</div>
+    <h1>project<span class="a">-trucha</span></h1>
+    <p class="tag">Toolkit colaborativo y <strong>local-first</strong> de <strong>memoria persistente</strong> para agentes de código: indexá un codebase y recuperalo con búsqueda híbrida —léxica + vectorial— sin infraestructura pesada.</p>
+    <div class="badges">
+      <span class="badge">Python 3.11+</span>
+      <span class="badge">SQLite · FTS5</span>
+      <span class="badge">búsqueda híbrida</span>
+      <span class="badge">MIT</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="slides/index.html">▸ Ver el deck</a>
+      <a class="btn ghost" href="https://github.com/MaximilianoRodrigoSoria/project-trucha">GitHub</a>
+      <a class="btn ghost" href="https://github.com/MaximilianoRodrigoSoria/project-trucha/tree/master/docs/adr">Decisiones (ADR)</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>¿Qué <span class="a">construimos</span>?</h2>
+    <p class="lead">Los agentes de código son tan buenos como el contexto que pueden recuperar. Sin memoria persistente, cada sesión arranca de cero. project-trucha mantiene un índice del codebase —léxico y semántico— que el agente consulta en milisegundos, sin levantar servicios externos ni pagar latencia de red.</p>
+    <div class="grid cols-3">
+      <div class="card"><h3>Indexado incremental</h3><p>Recorre, trocea y persiste el repo; reindexa por hash/mtime sólo lo que cambió.</p></div>
+      <div class="card"><h3>Búsqueda híbrida</h3><p>Léxica (BM25) + semántica (vectorial) fusionadas en una sola respuesta.</p></div>
+      <div class="card"><h3>Memoria de decisiones</h3><p>Guarda notas y ADRs asociados al código y los recupera por contexto.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>La <span class="a">decisión técnica</span><span class="tag-open">ABIERTA</span></h2>
+    <p class="lead">Buscamos el motor de memoria de menor fricción para un agente local. Hipótesis actual a validar: <strong>SQLite + FTS5 (+ sqlite-vec)</strong> — un archivo, sin servidor, búsqueda híbrida. Una vector DB dedicada se justifica a escala.</p>
+    <table>
+      <thead><tr><th>Opción</th><th>Fricción</th><th>Vectorial</th><th>Veredicto</th></tr></thead>
+      <tbody>
+        <tr class="win"><td>SQLite + FTS5 + sqlite-vec</td><td>Baja · embebido</td><td>KNN (extensión)</td><td>★ hipótesis</td></tr>
+        <tr><td>SQLite + FTS5</td><td>Muy baja</td><td>—</td><td>base léxica</td></tr>
+        <tr><td>LanceDB</td><td>Baja · embebido</td><td>rápida</td><td>alternativa</td></tr>
+        <tr><td>ChromaDB / pgvector</td><td>Media–alta</td><td>dedicada</td><td>a escala</td></tr>
+      </tbody>
+    </table>
+    <p class="lead" style="margin-top:12px">Se cierra en <span class="mono">ADR-0001</span>. <a href="slides/index.html">Ver el detalle en el deck →</a></p>
+  </section>
+
+  <section>
+    <h2>El <span class="a">equipo</span></h2>
+    <div class="team">
+      <div class="member"><a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><img src="img/maximiliano.png" alt="Maximiliano Soria"></a><div class="n">Maximiliano Soria</div><div class="r">Arquitecto de Software</div></div>
+      <div class="member"><a href="https://github.com/gerardo-lopez-dev"><img src="img/gerardo.png" alt="Gerardo"></a><div class="n">Gerardo</div><div class="r">Colaborador</div></div>
+    </div>
+    <p class="lead" style="text-align:center;margin-top:16px">Con <strong>Gerald</strong> 🤖 como par de IA · <em>"te quiero mucho como la trucha al trucho"</em></p>
+  </section>
+
+  <svg class="waves" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,60 C240,30 420,90 720,58 C1020,28 1200,88 1440,56 L1440,120 L0,120 Z" fill="#143A7E" opacity=".30"/>
+    <path d="M0,84 C240,58 420,104 720,80 C1020,56 1200,104 1440,78 L1440,120 L0,120 Z" fill="#2E6DB4" opacity=".32"/>
+    <path d="M0,100 C240,82 420,116 720,96 C1020,80 1200,116 1440,94 L1440,120 L0,120 Z" fill="#06C69C" opacity=".16"/>
+  </svg>
+
+  <footer>
+    Hecho con <span class="fish">🐟</span> por
+    <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">Maximiliano Soria</a>,
+    <a href="https://github.com/gerardo-lopez-dev">Gerardo</a> y Gerald ·
+    <a href="https://github.com/MaximilianoRodrigoSoria/project-trucha">Repositorio</a> ·
+    Licencia MIT
+  </footer>
+</div>
+
+</body>
+</html>
