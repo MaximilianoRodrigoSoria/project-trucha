@@ -305,7 +305,7 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 
 ## Licencia
 
-Distribuido bajo licencia **MIT**. Ver `LICENSE` (pendiente de agregar) para más detalle.
+Distribuido bajo licencia **MIT**. Ver el archivo [`LICENSE`](LICENSE) para el texto completo.
 
 ---
 
