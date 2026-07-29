@@ -1,0 +1,51 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# ---- Entornos virtuales ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Testing / cobertura / linters ----
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Indice de memoria / artefactos locales del store ----
+# (SQLite/FTS5, sqlite-vec, LanceDB, Chroma, etc. — se generan, no se versionan)
+*.db
+*.sqlite
+*.sqlite3
+*.lance
+data/
+.trucha/
+index/
+
+# ---- Embeddings / modelos ----
+*.bin
+*.gguf
+*.onnx
+models/
+
+# ---- IDE / SO ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+
+# ---- comittero (scratch: notas por rama) ----
+.comittero/
