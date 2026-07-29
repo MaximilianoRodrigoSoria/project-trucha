@@ -1,0 +1,19 @@
+[project]
+name = "trucha"
+version = "0.0.0"
+description = "Toolkit colaborativo de memoria persistente para agentes de codigo"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Maximiliano Soria", email = "maximilianorodrigosoria@gmail.com" },
+    { name = "Gerardo" },
+]
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
