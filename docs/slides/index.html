@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>project-trucha · qué construimos y qué decidimos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{--bg:#08090c;--panel:#0e0f13;--panel2:#101218;--ink:#e8eaed;--muted:#9aa0a6;--faint:#565b62;
+    --acc:#2ee59d;--cyan:#35b5ff;--line:#1c1f26;
+    --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',Inter,sans-serif;--body:'Inter',sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:radial-gradient(1200px 600px at 80% -10%,#0d1a15 0%,var(--bg) 55%);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  .deck{display:flex;flex-direction:column;height:100vh;padding:18px;gap:14px}
+  /* ---- header: brand + titulo + contador + focus + progreso segmentado ---- */
+  .top{display:flex;align-items:center;gap:16px}
+  .brand{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;font-weight:700;
+    letter-spacing:.14em;color:var(--acc);text-transform:uppercase;white-space:nowrap}
+  .brand .b{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#06120c;
+    background:linear-gradient(135deg,var(--acc),#12b981);box-shadow:0 0 16px rgba(46,229,157,.5)}
+  .top h1{font-size:19px;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mode{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--muted);
+    border:1px solid var(--line);border-radius:20px;padding:4px 11px}
+  #counter{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--acc)}
+  .icobtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);
+    color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:13px;transition:.15s}
+  .icobtn:hover{color:var(--acc);border-color:var(--acc)}
+  .seg{display:flex;gap:4px} .seg span{flex:1;height:4px;border-radius:3px;background:#191c22;transition:.25s}
+  .seg span.f{background:var(--acc);box-shadow:0 0 8px rgba(46,229,157,.6)}
+  .seg span.cur{background:var(--cyan);box-shadow:0 0 8px rgba(53,181,255,.6)}
+  /* ---- body: timeline rail (mi estilo) + stage ---- */
+  .body{display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:minmax(0,1fr);
+    gap:14px;flex:1;min-height:0;overflow:hidden}
+  .rail{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--panel2),#0b0d11);
+    padding:18px 14px;overflow:auto;position:relative}
+  .rail:before{content:"";position:absolute;left:31px;top:26px;bottom:26px;width:2px;
+    background:linear-gradient(180deg,transparent,#23272f 12%,#23272f 88%,transparent)}
+  .node{display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:12px;position:relative;cursor:pointer;transition:.15s}
+  .node .ico{width:34px;height:34px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:14px;
+    background:#14161d;border:1px solid #262a33;color:var(--faint);z-index:1;transition:.2s}
+  .node .lbl{display:flex;flex-direction:column;line-height:1.15}
+  .node .t{font-size:13px;font-weight:600;color:var(--muted)}
+  .node .sub{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--faint);margin-top:2px}
+  .subdots{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .sd{width:6px;height:6px;border-radius:50%;background:#2a2d34;transition:.2s}
+  .sd.f{background:#3f8f6f} .node.on .sd.f{background:var(--acc);box-shadow:0 0 6px var(--acc)}
+  .node.done .ico{color:var(--acc);border-color:#28503f}
+  .node.on{background:#12151c}
+  .node.on .ico{background:var(--acc);color:#06120c;border-color:var(--acc);box-shadow:0 0 18px rgba(46,229,157,.55);transform:scale(1.06)}
+  .node.on .t{color:var(--ink)} .node.on .sub{color:var(--acc)}
+  /* ---- stage: texto arriba, diagrama dominante abajo (mi distribucion) ---- */
+  .stage{position:relative;min-height:0;overflow:hidden}
+  .step{display:none;gap:12px;height:100%;min-height:0}
+  .step.on{display:grid;animation:fade .3s ease}
+  /* layouts por paso: top = texto arriba · side = texto al lado · full = solo gráfico.
+     minmax(0,1fr) evita que un SVG grande estire la fila y empuje la barra de nav */
+  .step.top{grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr)}
+  .step.side{grid-template-columns:minmax(300px,.95fr) minmax(0,1.35fr);grid-template-rows:minmax(0,1fr)}
+  .step.full{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .txt{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:18px 22px}
+  .step.side .txt{align-self:stretch;display:flex;flex-direction:column;justify-content:center;overflow:auto}
+  .txt .eb{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+    color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+  .txt h2{font-size:23px;font-weight:700;line-height:1.12;margin-bottom:7px}
+  .step.side .txt h2{font-size:27px}
+  .txt p{font-family:var(--body);font-size:13.5px;line-height:1.55;color:var(--muted);max-width:900px}
+  .txt .pts{list-style:none;margin-top:13px;display:flex;flex-direction:column;gap:9px;max-width:900px}
+  .txt .pts li{position:relative;padding-left:22px;font-family:var(--body);font-size:13px;line-height:1.5;color:var(--ink)}
+  .txt .pts li:before{content:"\25B8";position:absolute;left:3px;top:0;color:var(--acc);font-weight:700}
+  .txt .pts li b,.txt .pts li strong{color:var(--acc);font-weight:700}
+  .viz{position:relative;border:1px solid var(--line);border-radius:16px;
+    background:radial-gradient(600px 300px at 70% 0%,#0c1512,#0a0b0e);
+    padding:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
+  /* el diagrama llena la caja y el SVG se escala para caber (meet) → sirve en cualquier pantalla */
+  .viz .diag{width:100%;height:100%;display:flex;align-items:center;justify-content:center;cursor:grab}
+  .viz .diag svg{shape-rendering:geometricPrecision}
+  .viz .diag.grabbing{cursor:grabbing}
+  .viz .diag svg{width:100%;height:100%;max-width:100%;max-height:100%}
+  .viz .block.ig{width:100%;max-width:860px}
+  /* lupa: solo sobre el gráfico */
+  .zoomctl{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  .zb{width:33px;height:33px;border-radius:9px;border:1px solid var(--line);background:rgba(13,15,19,.82);
+    color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:12px;backdrop-filter:blur(5px);transition:.15s}
+  .zb:hover{color:var(--acc);border-color:var(--acc)}
+  .iggrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;align-content:center;justify-content:center}
+  .ic{--c:var(--acc);background:linear-gradient(180deg,#101217,#0d0e12);border:1px solid #23262e;border-radius:16px;
+    padding:20px;text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .icb{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;
+    font-size:14px;color:#08090a;background:var(--c);margin-bottom:12px;box-shadow:0 0 18px color-mix(in srgb,var(--c) 50%,transparent)}
+  .ict{font-size:30px;font-weight:700;line-height:1} .icd{font-family:var(--body);font-size:12.5px;color:var(--muted);margin-top:5px}
+  .ig h2{display:none}
+  /* ---- footer nav: botones circulares chevron + dots clickeables (mi estilo) ---- */
+  .nav{display:flex;align-items:center;justify-content:center;gap:18px}
+  .rnd{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);
+    color:var(--ink);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:.15s}
+  .rnd:hover:not(:disabled){border-color:var(--acc);color:var(--acc);box-shadow:0 0 18px rgba(46,229,157,.35)}
+  .rnd.p{background:var(--acc);color:#06120c;border-color:var(--acc)}
+  .rnd:disabled{opacity:.35;cursor:default}
+  .dots{display:flex;gap:8px;align-items:center}
+  .dots .d{width:8px;height:8px;border-radius:50%;background:#2a2d34;cursor:pointer;transition:.2s}
+  .dots .d.f{background:#3f8f6f} .dots .d.cur{background:var(--acc);transform:scale(1.5);box-shadow:0 0 10px var(--acc)}
+  .khint{font-family:var(--mono);font-size:9px;color:var(--faint);position:absolute;right:20px;bottom:22px}
+  @media (max-width:860px){.body{grid-template-columns:1fr}.rail{display:none}.khint{display:none}
+    .step.side{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+</style></head>
+<body>
+<div class="deck">
+  <div>
+    <div class="top">
+      <div class="brand"><span class="b"><i class="fa-solid fa-fish"></i></span>TRUCHA ▸ TABLERO</div>
+      <h1>project-trucha · memoria persistente para agentes de código</h1>
+      <span class="mode">DECISIÓN TÉCNICA</span>
+      <span id="counter">01 / 5</span>
+      <button class="icobtn" id="focus" title="Pantalla completa (F)"><i class="fa-solid fa-expand"></i></button>
+    </div>
+    <div class="seg" id="seg" style="margin-top:12px"></div>
+  </div>
+  <div class="body">
+    <aside class="rail">
+      <div class="node" data-sec="0"><span class="ico"><i class="fa-solid fa-cubes"></i></span><div class="lbl"><span class="t">Qué construimos</span><span class="sub">6 capacidades</span></div></div>
+      <div class="node" data-sec="1"><span class="ico"><i class="fa-solid fa-diagram-project"></i></span><div class="lbl"><span class="t">Arquitectura</span><span class="sub">pipeline</span></div></div>
+      <div class="node" data-sec="2"><span class="ico"><i class="fa-solid fa-scale-balanced"></i></span><div class="lbl"><span class="t">La decisión</span><span class="sub">backend memoria</span></div></div>
+      <div class="node" data-sec="3"><span class="ico"><i class="fa-solid fa-plug"></i></span><div class="lbl"><span class="t">Store desacoplado</span><span class="sub">reversible</span></div></div>
+      <div class="node" data-sec="4"><span class="ico"><i class="fa-solid fa-road"></i></span><div class="lbl"><span class="t">Roadmap</span><span class="sub">fases</span></div></div>
+    </aside>
+    <div class="stage">
+<div class="step side" data-sec="0"><div class="txt"><div class="eb"><i class="fa-solid fa-cubes"></i>QUÉ VAMOS A CONSTRUIR</div><h2>Memoria persistente para agentes de código</h2><p>Un índice local del codebase —léxico y semántico— que el agente consulta en milisegundos, sin levantar servicios externos. Local-first, portable y de baja fricción: <b>pip install</b> y listo.</p><ul class="pts"><li>Indexado incremental · búsqueda híbrida · memoria de decisiones</li><li>Capa <b>store</b> desacoplada: interfaz estable, backend intercambiable</li><li>CLI + API + (futuro) servidor MCP para el agente</li></ul></div><div class="viz"><section class="block ig" style="--c:#2ee59d"><h2></h2><div class="iggrid"><div class="ic" style="--c:#2ee59d"><div class="icb">01</div><div class="ict">Indexado</div><div class="icd">Recorre, trocea (archivo/símbolo/bloque) y persiste el repo</div></div><div class="ic" style="--c:#2ee59d"><div class="icb">02</div><div class="ict">Léxica</div><div class="icd">Full-text BM25: match exacto por identificador</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">03</div><div class="ict">Semántica</div><div class="icd">Embeddings + similitud: recupera por significado</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">04</div><div class="ict">Híbrida</div><div class="icd">RRF: fusiona léxico + vectorial en una respuesta</div></div><div class="ic" style="--c:#b07cf7"><div class="icb">05</div><div class="ict">Memoria</div><div class="icd">Guarda notas/ADRs y las recupera por contexto</div></div><div class="ic" style="--c:#ffd54d"><div class="icb">06</div><div class="ict">Incremental</div><div class="icd">Reindexa por hash/mtime sólo lo que cambió</div></div></div></section></div></div>
+<div class="step top" data-sec="1"><div class="txt"><div class="eb"><i class="fa-solid fa-diagram-project"></i>PIPELINE</div><h2>Del repo al agente, con la memoria en el centro</h2><p>Dos flujos convergen en <b>store</b>: la ingesta indexa el contenido y la recuperación lo consulta. El store es el único punto que la decisión técnica deja abierto — todo lo demás depende de su interfaz, no de su implementación.</p><ul class="pts"><li>ingesta → embeddings → <b>store</b> ← retrieve ← interfaz ← agente</li><li>El agente pregunta por la interfaz; nunca toca el backend directo</li></ul></div><div class="viz"><div class="zoomctl"><button class="zb zin" title="Acercar"><i class="fa-solid fa-magnifying-glass-plus"></i></button><button class="zb zout" title="Alejar"><i class="fa-solid fa-magnifying-glass-minus"></i></button><button class="zb zfit" title="Ajustar"><i class="fa-solid fa-expand"></i></button></div><div class="diag" id="d_1"></div></div></div>
+<div class="step side" data-sec="2"><div class="txt"><div class="eb"><i class="fa-solid fa-scale-balanced"></i>DECISIÓN #1 · ABIERTA</div><h2>¿Qué backend de memoria?</h2><p>Necesitamos léxica + vectorial + metadata con la menor fricción operativa, porque el consumidor es un agente local, no un servicio multi-tenant. Hipótesis actual a validar: <b>SQLite + FTS5 (+ sqlite-vec)</b>.</p><ul class="pts"><li><b>★</b> menor fricción, latencia y consumo para el caso local</li><li>Vector DB dedicada se justifica a escala / millones de docs</li><li>Se cierra en <b>ADR-0001</b> cuando el equipo converja</li></ul></div><div class="viz"><section class="block ig" style="--c:#35b5ff"><h2></h2><div class="iggrid"><div class="ic" style="--c:#2ee59d"><div class="icb">★</div><div class="ict">SQLite+vec</div><div class="icd">FTS5 + sqlite-vec: 1 archivo, sin servidor, híbrida. Hipótesis actual</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">◆</div><div class="ict">SQLite FTS5</div><div class="icd">Base léxica BM25, muy baja fricción. Sin vectorial nativa</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">◆</div><div class="ict">LanceDB</div><div class="icd">Vector store embebido y veloz; léxico menos maduro</div></div><div class="ic" style="--c:#ff9f43"><div class="icb">↑</div><div class="ict">ChromaDB</div><div class="icd">Vectorial dedicada; suma deps y estado propio</div></div><div class="ic" style="--c:#ff9f43"><div class="icb">↑</div><div class="ict">pgvector</div><div class="icd">SQL + vector potente, pero exige servidor Postgres</div></div><div class="ic" style="--c:#ff6b6b"><div class="icb">↑</div><div class="ict">Qdrant</div><div class="icd">Features avanzadas; overkill para local individual</div></div></div></section></div></div>
+<div class="step side" data-sec="3"><div class="txt"><div class="eb"><i class="fa-solid fa-plug"></i>DECISIÓN REVERSIBLE</div><h2>Una interfaz estable, backends intercambiables</h2><p>Mientras la decisión siga abierta, el resto del toolkit habla con una interfaz de <b>store</b>, no con un motor concreto. Así podemos comparar —y hasta cambiar— el backend sin reescribir ingest, retrieve ni la interfaz del agente.</p><ul class="pts"><li>Hoy: <b>SQLite + FTS5 + sqlite-vec</b> (embebido, 1 archivo)</li><li>Alternativa embebida: LanceDB</li><li>A escala: ChromaDB / pgvector con servidor</li></ul></div><div class="viz"><div class="zoomctl"><button class="zb zin" title="Acercar"><i class="fa-solid fa-magnifying-glass-plus"></i></button><button class="zb zout" title="Alejar"><i class="fa-solid fa-magnifying-glass-minus"></i></button><button class="zb zfit" title="Ajustar"><i class="fa-solid fa-expand"></i></button></div><div class="diag" id="d_3"></div></div></div>
+<div class="step side" data-sec="4"><div class="txt"><div class="eb"><i class="fa-solid fa-road"></i>ROADMAP</div><h2>De la decisión al toolkit</h2><p>Fase 0 en curso: cerrar el backend y congelar la interfaz. El resto se construye encima, de a fases y en comunidad. El aporte más valioso hoy es participar en la decisión de arquitectura.</p><ul class="pts"><li>Cada decisión cerrada → un ADR en <b>docs/adr/</b></li><li>🐟 Maximiliano Soria · Gerardo · Gerald</li></ul></div><div class="viz"><section class="block ig" style="--c:#2ee59d"><h2></h2><div class="iggrid"><div class="ic" style="--c:#2ee59d"><div class="icb">0</div><div class="ict">Decisión</div><div class="icd">Cerrar backend (ADR-0001) + congelar interfaz store · ACTUAL</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">1</div><div class="ict">Núcleo</div><div class="icd">Indexado + búsqueda léxica + reindex incremental</div></div><div class="ic" style="--c:#35b5ff"><div class="icb">2</div><div class="ict">Semántica</div><div class="icd">Embeddings + vectorial + fusión híbrida</div></div><div class="ic" style="--c:#b07cf7"><div class="icb">3</div><div class="ict">MCP</div><div class="icd">CLI estable + servidor MCP para el agente</div></div></div></section></div></div>
+      <div class="khint">← →  ·  F focus</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="rnd" id="prev"><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="dots" id="dots"></div>
+    <button class="rnd p" id="next"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3/dist/svg.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>/* mk5-diagrams — motor declarativo de diagramas SVG (modo PRO / algomaster-grade)
+ *
+ * Pipeline:  spec JSON {nodes, edges}  ->  ELK.js (layout)  ->  SVG.js (render)
+ *            ->  tema mk5 (colores/glow)  ->  GSAP (animacion)
+ *
+ * Uso:
+ *   <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3/dist/svg.min.js"><\/script>
+ *   <script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"><\/script>
+ *   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"><\/script>
+ *   <script src="mk5-diagrams.js"><\/script>
+ *   MK5Diagrams.render('#diagrama', {
+ *     nodes: [
+ *       {id:'client',  label:'Client',        type:'client'},
+ *       {id:'gw',      label:'API Gateway',   type:'gateway'},
+ *       {id:'svc',     label:'Order Service', type:'service'},
+ *       {id:'db',      label:'PostgreSQL',    type:'database'},
+ *     ],
+ *     edges: [
+ *       {from:'client', to:'gw',  label:'HTTPS'},
+ *       {from:'gw',     to:'svc', label:'REST'},
+ *       {from:'svc',    to:'db',  label:'SQL'},
+ *     ],
+ *   }, {direction:'RIGHT', animate:true});
+ *
+ * Degradacion: sin ELK usa un layout por niveles propio; sin GSAP queda estatico;
+ * con prefers-reduced-motion no anima. Los tipos de nodo son componentes del tema
+ * (pill, caja, cilindro DB, cola, cache) — mismos tokens que los templates.
+ */
+(function (global) {
+  'use strict';
+
+  const MONO = "'JetBrains Mono', monospace", SANS = "'Space Grotesk', Inter, sans-serif";
+  const DARK = {
+    bg: '#0a0a0c', card: '#121216', card2: '#17171b', ink: '#e8eaed',
+    muted: '#9aa0a6', grid: '#2b2f34', dot: '#ffffff', dotGlow: '255,255,255',
+    colors: { cyan: '#35b5ff', green: '#2ee59d', yellow: '#ffd54d',
+      orange: '#ff9f43', red: '#ff6b6b', purple: '#b07cf7' },
+    darkOn: { '#35b5ff': '#06131f', '#2ee59d': '#062018', '#ffd54d': '#221a04',
+      '#ff9f43': '#221204', '#ff6b6b': '#1f0808', '#b07cf7': '#150a22' },
+    mono: MONO, sans: SANS,
+  };
+  const LIGHT = {
+    bg: '#eef0ea', card: '#ffffff', card2: '#f1f3ef', ink: '#20242a',
+    muted: '#5c6169', grid: '#ccd2cc', dot: '#25384c', dotGlow: '20,40,60',
+    colors: { cyan: '#1a86cf', green: '#12a15f', yellow: '#c08e00',
+      orange: '#df741a', red: '#d64141', purple: '#7a44d3' },
+    // sobre acentos claros el texto va casi-blanco para contraste
+    darkOn: { '#1a86cf': '#f5fbff', '#12a15f': '#f2fff8', '#c08e00': '#fff9e6',
+      '#df741a': '#fff4ea', '#d64141': '#fff0f0', '#7a44d3': '#f6f0ff' },
+    mono: MONO, sans: SANS,
+  };
+  let THEME = DARK;   // el tema activo lo fija render()/sequence() segun opts.theme
+
+  // tipo de nodo -> tamano, color y forma (componentes del tema)
+  const TYPES = {
+    client:   { w: 104, h: 34, color: 'cyan',   shape: 'pill' },
+    gateway:  { w: 132, h: 46, color: 'purple', shape: 'box' },
+    service:  { w: 138, h: 46, color: 'green',  shape: 'box' },
+    database: { w: 86,  h: 70, color: 'cyan',   shape: 'cylinder' },
+    queue:    { w: 132, h: 40, color: 'orange', shape: 'queue' },
+    cache:    { w: 122, h: 44, color: 'red',    shape: 'cache' },
+    default:  { w: 132, h: 46, color: 'green',  shape: 'box' },
+  };
+
+  const rgba = (hex, a) => {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+  };
+  const glow = (el, hex, px = 4, a = .55) =>
+    el.css('filter', `drop-shadow(0 0 ${px}px ${rgba(hex, a)})`);
+
+  // ancho de nodo proporcional a la etiqueta (para que el texto no se salga de la caja
+  // y ELK reserve el espacio real, evitando choques). Devuelve una copia del TYPE con w ajustado.
+  function sizedType(base, label) {
+    const L = (label || '').length;
+    const per = base.shape === 'box' ? 8.1 : base.shape === 'pill' ? 7.6 : 6.6; // px por caracter aprox
+    const padX = base.shape === 'queue' ? 54 : base.shape === 'cache' ? 40 : 28; // cola: reserva icono
+    const w = Math.max(base.w, Math.min(300, Math.ceil(L * per + padX)));
+    return Object.assign({}, base, { w });
+  }
+
+  // ---------------- layout: ELK con fallback por niveles ----------------
+  async function layout(spec, opts) {
+    const dir = opts.direction || 'RIGHT';
+    const dims = spec.nodes.map(n => ({ n, t: sizedType(TYPES[n.type] || TYPES.default, n.label) }));
+    if (global.ELK) {
+      const elk = new global.ELK();
+      const g = await elk.layout({
+        id: 'root',
+        layoutOptions: {
+          'elk.algorithm': 'layered',
+          'elk.direction': dir,
+          'elk.spacing.nodeNode': '60',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '140',
+          'elk.edgeRouting': 'ORTHOGONAL',
+        },
+        // el cilindro (DB) dibuja su label DEBAJO del nodo: se reserva alto extra
+        // para que ELK no apile el siguiente nodo encima de ese texto
+        children: dims.map(({ n, t }) => ({
+          id: n.id, width: t.w, height: t.h + (t.shape === 'cylinder' ? 20 : 0),
+        })),
+        edges: spec.edges.map((e, i) => ({ id: 'e' + i, sources: [e.from], targets: [e.to] })),
+      });
+      const pos = {};
+      g.children.forEach(c => { pos[c.id] = { x: c.x, y: c.y }; });
+      const routes = g.edges.map(e => {
+        const s = e.sections[0];
+        return [s.startPoint, ...(s.bendPoints || []), s.endPoint];
+      });
+      return { pos, routes, w: g.width, h: g.height };
+    }
+    // fallback: niveles por BFS (sin ELK)
+    const level = {}, incoming = {};
+    spec.edges.forEach(e => { incoming[e.to] = (incoming[e.to] || 0) + 1; });
+    let frontier = spec.nodes.filter(n => !incoming[n.id]).map(n => n.id);
+    let l = 0;
+    const seen = new Set();
+    while (frontier.length) {
+      frontier.forEach(id => { level[id] = l; seen.add(id); });
+      frontier = spec.edges.filter(e => seen.has(e.from) && !seen.has(e.to)).map(e => e.to);
+      l++;
+    }
+    spec.nodes.forEach(n => { if (!(n.id in level)) level[n.id] = l; });
+    const byLevel = {};
+    dims.forEach(({ n, t }) => (byLevel[level[n.id]] = byLevel[level[n.id]] || []).push({ n, t }));
+    const pos = {};
+    const colW = 200, rowH = 100;
+    Object.entries(byLevel).forEach(([lv, items]) => {
+      items.forEach(({ n, t }, i) => {
+        pos[n.id] = { x: lv * colW, y: i * rowH + (lv % 2) * 20 };
+      });
+    });
+    const routes = spec.edges.map(e => {
+      const a = pos[e.from], b = pos[e.to];
+      const ta = TYPES[spec.nodes.find(n => n.id === e.from).type] || TYPES.default;
+      const tb = TYPES[spec.nodes.find(n => n.id === e.to).type] || TYPES.default;
+      return [{ x: a.x + ta.w, y: a.y + ta.h / 2 }, { x: b.x, y: b.y + tb.h / 2 }];
+    });
+    const w = Math.max(...Object.values(pos).map(p => p.x)) + 220;
+    const h = Math.max(...Object.values(pos).map(p => p.y)) + 120;
+    return { pos, routes, w, h };
+  }
+
+  // ---------------- componentes de nodo ----------------
+  function drawNode(draw, node, t, color) {
+    const g = draw.group();
+    const dark = THEME.darkOn[color] || '#0a0a0c';
+    if (t.shape === 'pill') {
+      glow(g.rect(t.w, t.h).radius(t.h / 2).fill(color), color);
+      g.text(node.label).font({ family: THEME.mono, size: 12, weight: 700 })
+        .fill(dark).center(t.w / 2, t.h / 2);
+    } else if (t.shape === 'cylinder') {
+      const rx = t.w / 2, ry = rx * .32, bh = t.h - ry * 2;
+      const body = g.path(`M0 ${ry} v${bh} a${rx} ${ry} 0 0 0 ${t.w} 0 v-${bh}`).fill(color);
+      g.path(`M0 ${ry + bh * .38} a${rx} ${ry} 0 0 0 ${t.w} 0`)
+        .fill('none').stroke({ color: dark, width: 1.6, opacity: .5 });
+      g.ellipse(t.w, ry * 2).move(0, 0).fill(color);
+      g.ellipse(t.w, ry * 2).move(0, 0).fill('#ffffff').opacity(.28);
+      glow(body, color);
+      g.text(node.label).font({ family: THEME.mono, size: 10, weight: 700 })
+        .fill(color).center(t.w / 2, t.h + 12);
+    } else if (t.shape === 'queue') {
+      const r = g.rect(t.w, t.h).radius(9).fill(THEME.card2)
+        .stroke({ color, width: 1.8 });
+      glow(r, color, 3.5);
+      // icono de cola: 3 barritas a la izquierda, centradas verticalmente
+      const iy = t.h / 2 - 6.5;
+      for (let i = 0; i < 3; i++)
+        g.rect(16, 3.5).radius(2).fill(color).opacity(.9 - i * .22).move(12, iy + i * 5);
+      // etiqueta centrada (vertical y en el espacio a la derecha del icono)
+      const ix = 36;
+      g.text(node.label).font({ family: THEME.mono, size: 10.5, weight: 700 })
+        .fill(color).center(ix + (t.w - ix - 10) / 2, t.h / 2);
+    } else if (t.shape === 'cache') {
+      const r = g.rect(t.w, t.h).radius(9).fill(THEME.card2)
+        .stroke({ color, width: 1.8 });
+      glow(r, color, 3.5);
+      g.path('M16 10 l-6 11 h6 l-4 11 l11 -15 h-6 l5 -7 z').fill(THEME.colors.yellow);
+      g.text(node.label).font({ family: THEME.mono, size: 11, weight: 700 })
+        .fill(color).center(t.w / 2 + 8, t.h / 2);
+    } else { // box
+      const r = g.rect(t.w, t.h).radius(10).fill(THEME.card2)
+        .stroke({ color, width: 1.8 });
+      glow(r, color, 3.5);
+      g.text(node.label).font({ family: THEME.sans, size: 13, weight: 700 })
+        .fill(color).center(t.w / 2, t.h / 2 - (node.sub ? 6 : 0));
+      if (node.sub)
+        g.text(node.sub).font({ family: THEME.mono, size: 8.5 })
+          .fill(THEME.muted).center(t.w / 2, t.h / 2 + 10);
+    }
+    return g;
+  }
+
+  // punto medio del segmento recto MÁS LARGO de la polilínea: centra la etiqueta sobre el
+  // tramo principal de la arista (normalmente el run horizontal entre capas). Al ser único
+  // por arista y a distinta altura, las etiquetas no se amontonan aunque converjan en un nodo.
+  function labelPoint(pts) {
+    // Centro del segmento recto más largo. Preferimos tramos interiores (no los stubs que
+    // tocan los nodos) SOLO para elegir el segmento; la etiqueta se dibuja centrada sobre él.
+    const nseg = pts.length - 1;
+    const lo = nseg >= 3 ? 2 : 1, hi = nseg >= 3 ? pts.length - 1 : pts.length;
+    let best = -1, bx = (pts[0].x + pts[1].x) / 2, by = (pts[0].y + pts[1].y) / 2;
+    for (let i = lo; i < hi; i++) {
+      const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      if (l > best) { best = l; bx = (pts[i - 1].x + pts[i].x) / 2; by = (pts[i - 1].y + pts[i].y) / 2; }
+    }
+    return { x: bx, y: by };
+  }
+
+  function drawEdge(draw, pts, label, color) {
+    const d = 'M' + pts.map(p => `${p.x} ${p.y}`).join(' L');
+    const path = draw.path(d).fill('none')
+      .stroke({ color, width: 2, linecap: 'round', linejoin: 'round' });
+    glow(path, color, 3.5);
+    // punta de flecha orientada segun el ultimo segmento
+    const a = pts[pts.length - 2], b = pts[pts.length - 1];
+    const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    const head = draw.path('M0 -4.5 L8 0 L0 4.5 z').fill(color)
+      .center(b.x, b.y).rotate(ang, b.x, b.y);
+    glow(head, color, 3.5);
+    let chip = null;
+    if (label) {
+      // centrada sobre el tramo recto más largo de la arista; si es horizontal la subo apenas
+      // para no tapar la línea, si es vertical la corro al costado
+      const p = labelPoint(pts);
+      const w = label.length * 6.4 + 14;
+      chip = draw.group();
+      chip.rect(w, 17).radius(8.5).fill(THEME.bg)
+        .stroke({ color, width: 1.2 });
+      chip.text(label).font({ family: THEME.mono, size: 9, weight: 700 })
+        .fill(color).center(w / 2, 8.5);
+      chip.center(p.x, p.y);   // centrado sobre el trazo (la línea queda oculta por la pastilla)
+    }
+    return { path, head, chip, pts };
+  }
+
+  // ---------------- animacion GSAP ----------------
+  function animate(nodeGs, edgeObjs) {
+    if (!global.gsap) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const gsap = global.gsap;
+    gsap.from(nodeGs.map(g => g.node), {
+      scale: 0, transformOrigin: '50% 50%', duration: .65,
+      stagger: .12, ease: 'back.out(2)', delay: .15,
+    });
+    edgeObjs.forEach((e, i) => {
+      const len = e.path.node.getTotalLength();
+      gsap.fromTo(e.path.node, { strokeDasharray: len, strokeDashoffset: len },
+        { strokeDashoffset: 0, duration: .8, delay: .7 + i * .25, ease: 'power2.out' });
+      gsap.from(e.head.node, { autoAlpha: 0, duration: .3, delay: 1.3 + i * .25 });
+      if (e.chip) gsap.from(e.chip.node, {
+        autoAlpha: 0, y: 6, duration: .5, delay: 1.1 + i * .25, ease: 'power2.out',
+      });
+      // pulso que viaja por la ruta (polilinea) en loop
+      const svg = e.path.node.ownerSVGElement;
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('r', '3.6'); dot.setAttribute('fill', THEME.dot);
+      dot.setAttribute('opacity', '0');
+      dot.style.filter = `drop-shadow(0 0 5px rgba(${THEME.dotGlow},.75))`;
+      svg.appendChild(dot);
+      const segs = [];
+      let total = 0;
+      for (let k = 0; k < e.pts.length - 1; k++) {
+        const L = Math.hypot(e.pts[k + 1].x - e.pts[k].x, e.pts[k + 1].y - e.pts[k].y);
+        segs.push(L); total += L;
+      }
+      const speed = 150; // px/seg
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 1, delay: 1.9 + i * .35 });
+      tl.set(dot, { opacity: .95, attr: { cx: e.pts[0].x, cy: e.pts[0].y } });
+      e.pts.slice(1).forEach((p, k) => {
+        tl.to(dot, { attr: { cx: p.x, cy: p.y }, duration: Math.max(segs[k] / speed, .05), ease: 'none' });
+      });
+      tl.to(dot, { opacity: 0, duration: .25 });
+    });
+  }
+
+  // ---------------- API ----------------
+  async function render(container, spec, opts = {}) {
+    const el = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!el || !global.SVG) { console.error('mk5-diagrams: falta contenedor o SVG.js'); return; }
+    THEME = opts.theme === 'light' ? LIGHT : DARK;
+    const { pos, routes, w, h } = await layout(spec, opts);
+    const PAD = 26, EXTRA = 22; // margen inferior extra para labels de cilindros
+    const draw = global.SVG().addTo(el)
+      .viewbox(-PAD, -PAD, w + PAD * 2, h + PAD * 2 + EXTRA)
+      .attr({ width: '100%', preserveAspectRatio: 'xMidYMid meet' });
+    const edgeColorList = Object.values(THEME.colors);
+    const edgeObjs = routes.map((pts, i) => {
+      const e = spec.edges[i];
+      const srcNode = spec.nodes.find(n => n.id === e.from);
+      const t = TYPES[srcNode.type] || TYPES.default;
+      const color = THEME.colors[e.color || t.color] || edgeColorList[i % edgeColorList.length];
+      return drawEdge(draw, pts, e.label, color);
+    });
+    const nodeGs = spec.nodes.map(n => {
+      const t = sizedType(TYPES[n.type] || TYPES.default, n.label);
+      const color = THEME.colors[n.color || t.color];
+      const g = drawNode(draw, n, t, color);
+      g.translate(pos[n.id].x, pos[n.id].y);
+      return g;
+    });
+    if (opts.animate !== false) animate(nodeGs, edgeObjs);
+    return draw;
+  }
+
+  // ============================================================ modo SECUENCIA
+  // Diagrama de secuencia declarativo: actores (lifelines) + steps (mensajes en
+  // el tiempo). Soporta mensajes con label/dashed/color, self-messages, y cajas de
+  // activacion (activate/deactivate) para representar "el server retiene / conexion
+  // abierta". No usa ELK: el layout temporal es filas verticales.
+  //   spec = { actors:[{id,label,color}], steps:[
+  //     {from,to,label,dashed?,color?} | {activate:id,label?} | {deactivate:id} ],
+  //     caption? }
+  function sequence(container, spec, opts = {}) {
+    const el = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!el || !global.SVG) { console.error('mk5-diagrams: falta contenedor o SVG.js'); return; }
+    THEME = opts.theme === 'light' ? LIGHT : DARK;
+    const actors = spec.actors || [];
+    const W = opts.width || 300;
+    const startY = 58, gap = opts.gap || 30;
+    const steps = spec.steps || [];
+    const msgCount = steps.filter(s => s.from).length;
+    const H = startY + msgCount * gap + 44;
+    const draw = global.SVG().addTo(el).viewbox(0, 0, W, H)
+      .attr({ width: '100%', preserveAspectRatio: 'xMidYMid meet' });
+    const n = actors.length, margin = 56;
+    const ax = {};
+    actors.forEach((a, i) => { ax[a.id] = margin + (W - 2 * margin) * (n === 1 ? .5 : i / (n - 1)); });
+    const colorOf = id => THEME.colors[(actors.find(a => a.id === id) || {}).color] || THEME.colors.cyan;
+
+    // eje de tiempo + lifelines + pills
+    draw.line(16, startY - 18, 16, H - 22).stroke({ color: THEME.grid, width: 1.4 });
+    draw.path(`M12 ${H - 26} l4 8 l4 -8 z`).fill(THEME.grid);
+    draw.text('time').font({ family: THEME.mono, size: 8.5 }).fill(THEME.muted)
+      .center(9, (startY + H) / 2 - 10).rotate(-90, 9, (startY + H) / 2 - 10);
+    actors.forEach(a => {
+      const x = ax[a.id], c = colorOf(a.id), dark = THEME.darkOn[c] || '#0a0a0c';
+      draw.line(x, 38, x, H - 22).stroke({ color: THEME.grid, width: 1.3 });
+      const w = Math.max(64, a.label.length * 8 + 22), g = draw.group();
+      glow(g.rect(w, 22).radius(11).fill(c).cx(x).y(10), c);
+      g.text(a.label).font({ family: THEME.mono, size: 11, weight: 700 }).fill(dark).center(x, 21);
+    });
+
+    let row = 0;
+    const open = {}, boxes = [], msgs = [];
+    const closeBox = (id, y1) => {
+      const y0 = open[id]; if (y0 == null) return;
+      const c = colorOf(id);
+      boxes.push(draw.rect(9, Math.max(y1 - y0, 12)).radius(4).fill(c).opacity(.32).cx(ax[id]).y(y0));
+      delete open[id];
+    };
+    steps.forEach(s => {
+      if (s.activate) {
+        open[s.activate] = startY + row * gap - 8;
+        if (s.label) draw.text(s.label).font({ family: THEME.mono, size: 8.5, weight: 700 })
+          .fill(colorOf(s.activate)).center(ax[s.activate] + 26, startY + row * gap + 10)
+          .rotate(90, ax[s.activate] + 26, startY + row * gap + 10);
+        return;
+      }
+      if (s.deactivate) { closeBox(s.deactivate, startY + row * gap - 8); return; }
+      const y = startY + row * gap;
+      const c = THEME.colors[s.color] || colorOf(s.from);
+      const x1 = ax[s.from], x2 = ax[s.to];
+      if (s.from === s.to) {
+        const p = draw.path(`M${x1} ${y} h24 v11 h-24`).fill('none')
+          .stroke({ color: c, width: 2, linecap: 'round' }); glow(p, c, 3.5);
+        glow(draw.path(`M${x1 + 3} ${y + 7} L${x1 - 3} ${y + 11} L${x1 + 3} ${y + 15} z`).fill(c), c, 3.5);
+      } else {
+        const dir = x2 > x1 ? 1 : -1, tip = x2 - dir * 3;
+        const line = draw.line(x1 + dir * 3, y, tip, y)
+          .stroke({ color: c, width: 2, linecap: 'round', dasharray: s.dashed ? '5 4' : null });
+        glow(line, c, 3.5);
+        glow(draw.path(`M${tip} ${y - 4} L${x2} ${y} L${tip} ${y + 4} z`).fill(c), c, 3.5);
+        msgs.push({ line, x1: x1 + dir * 3, x2: tip, y });
+      }
+      if (s.label) draw.text(s.label).font({ family: THEME.mono, size: 9, weight: 600 })
+        .fill(c).center((x1 + x2) / 2, y - 8);
+      row++;
+    });
+    Object.keys(open).forEach(id => closeBox(id, startY + row * gap - 8));
+    boxes.forEach(b => b.back());   // cajas detras de los mensajes
+    if (spec.caption) draw.text(spec.caption).font({ family: THEME.mono, size: 9.5 })
+      .fill(THEME.muted).center(W / 2, H - 8);
+
+    if (opts.animate !== false && global.gsap
+        && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const gsap = global.gsap;
+      boxes.forEach(b => gsap.to(b.node, { opacity: .55, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut' }));
+      msgs.forEach((m, i) => {
+        const len = Math.abs(m.x2 - m.x1);
+        gsap.fromTo(m.line.node, { strokeDasharray: len, strokeDashoffset: len },
+          { strokeDashoffset: 0, duration: .5, delay: .3 + i * .3, ease: 'power2.out' });
+        const dot = draw.circle(7).fill(THEME.dot).center(m.x1, m.y).opacity(0);
+        dot.node.style.filter = `drop-shadow(0 0 5px rgba(${THEME.dotGlow},.75))`;
+        gsap.timeline({ repeat: -1, repeatDelay: 1.1, delay: 1 + i * .22 })
+          .set(dot.node, { opacity: .95, attr: { cx: m.x1, cy: m.y } })
+          .to(dot.node, { attr: { cx: m.x2 }, duration: .5, ease: 'power1.inOut' })
+          .to(dot.node, { opacity: 0, duration: .2 });
+      });
+    }
+    return draw;
+  }
+
+  global.MK5Diagrams = { render, sequence, THEME, TYPES };
+})(window);
+</script>
+<script>
+  const STEPS=[{"sec":0,"k":"infografia"},{"sec":1,"k":"flujo","fn":"render","spec":{"nodes":[{"id":"ing","label":"Ingesta","type":"service"},{"id":"emb","label":"Embeddings","type":"service"},{"id":"sto","label":"Store","type":"database"},{"id":"ret","label":"Retrieve","type":"service"},{"id":"int","label":"Interfaz / MCP","type":"gateway"},{"id":"agt","label":"Agente","type":"client"}],"edges":[{"from":"ing","to":"emb","label":"trocea","color":"green"},{"from":"emb","to":"sto","label":"indexa","color":"purple"},{"from":"agt","to":"int","label":"pregunta","color":"cyan"},{"from":"int","to":"ret","label":"query","color":"green"},{"from":"ret","to":"sto","label":"busca","color":"purple"}]},"opts":{"direction":"RIGHT","animate":true,"theme":"dark"}},{"sec":2,"k":"infografia"},{"sec":3,"k":"flujo","fn":"render","spec":{"nodes":[{"id":"api","label":"Interfaz store","type":"gateway"},{"id":"o1","label":"SQLite+FTS5+vec","type":"database"},{"id":"o2","label":"LanceDB","type":"database"},{"id":"o3","label":"ChromaDB","type":"service"},{"id":"o4","label":"pgvector","type":"database"}],"edges":[{"from":"api","to":"o1","label":"hoy ★","color":"green"},{"from":"api","to":"o2","label":"alt","color":"cyan"},{"from":"api","to":"o3","label":"a escala","color":"orange"},{"from":"api","to":"o4","label":"a escala","color":"orange"}]},"opts":{"direction":"RIGHT","animate":true,"theme":"dark"}},{"sec":4,"k":"infografia"}], TOTAL=STEPS.length;
+  const stepEls=[...document.querySelectorAll('.step')];
+  const nodeEls=[...document.querySelectorAll('.node')];
+  const rendered=new Set(); let cur=0;
+  const pad=n=>String(n).padStart(2,'0');
+  // construir segmentos y dots dinámicos
+  const seg=document.getElementById('seg'), dots=document.getElementById('dots');
+  for(let k=0;k<TOTAL;k++){
+    const s=document.createElement('span'); seg.appendChild(s);
+    const d=document.createElement('span'); d.className='d'; d.onclick=()=>show(k); dots.appendChild(d);
+  }
+  const segEls=[...seg.children], dotEls=[...dots.children];
+  // inicio global de cada sección (índice del primer paso) para el sub-progreso del rail
+  const secStart={}; STEPS.forEach((s,k)=>{ if(secStart[s.sec]===undefined)secStart[s.sec]=k; });
+  function show(i){
+    i=Math.max(0,Math.min(TOTAL-1,i)); cur=i;
+    stepEls.forEach((el,k)=>el.classList.toggle('on',k===i));
+    const st=STEPS[i];
+    nodeEls.forEach((nd,si)=>{
+      nd.classList.toggle('on', si===st.sec);
+      nd.classList.toggle('done', si<st.sec);
+      const sds=[...nd.querySelectorAll('.sd')], start=secStart[si]||0;
+      sds.forEach((d,di)=>d.classList.toggle('f', si<st.sec || (si===st.sec && di<=(i-start))));
+    });
+    segEls.forEach((s,k)=>{s.classList.toggle('f',k<i);s.classList.toggle('cur',k===i);});
+    dotEls.forEach((d,k)=>{d.classList.toggle('f',k<i);d.classList.toggle('cur',k===i);});
+    document.getElementById('counter').textContent=pad(i+1)+' / '+pad(TOTAL);
+    document.getElementById('prev').disabled=i===0;
+    document.getElementById('next').disabled=i===TOTAL-1;
+    if(st.k==='flujo' && !rendered.has(i) && window.MK5Diagrams){
+      rendered.add(i); try{ MK5Diagrams[st.fn]('#d_'+i, st.spec, st.opts); }catch(e){console.error(e);}
+    }
+  }
+  // ---- lupa (zoom + pan) sobre el viewBox del SVG → vectorial y NÍTIDO a cualquier zoom ----
+  document.querySelectorAll('.step').forEach(step=>{
+    const viz=step.querySelector('.viz'), diag=step.querySelector('.diag'); if(!diag)return;
+    let base=null, drag=false, px=0, py=0;
+    const svg=()=>diag.querySelector('svg');
+    const getVB=()=>{ const s=svg(); if(!s)return null;
+      const v=(s.getAttribute('viewBox')||'').trim().split(/\s+/).map(Number);
+      return v.length===4 && v.every(x=>!isNaN(x)) ? v : null; };
+    const setVB=v=>{ const s=svg(); if(s) s.setAttribute('viewBox', v.join(' ')); };
+    const ensureBase=()=>{ if(!base){ const v=getVB(); if(v) base=v.slice(); } return base; };
+    function zoomAt(factor, cx, cy){   // factor<1 acerca; cx,cy = 0..1 dentro del panel
+      ensureBase(); const v=getVB(); if(!v||!base) return;
+      let nw=v[2]*factor, nh=v[3]*factor;
+      nw=Math.min(base[2]*10, Math.max(base[2]*0.06, nw));   // límites de zoom
+      nh=Math.min(base[3]*10, Math.max(base[3]*0.06, nh));
+      v[0]+=(v[2]-nw)*cx; v[1]+=(v[3]-nh)*cy; v[2]=nw; v[3]=nh; setVB(v);
+    }
+    viz.addEventListener('wheel',e=>{ e.preventDefault();
+      const r=viz.getBoundingClientRect();
+      zoomAt(e.deltaY<0?0.9:1.1111, (e.clientX-r.left)/r.width, (e.clientY-r.top)/r.height);
+    },{passive:false});
+    diag.addEventListener('mousedown',e=>{drag=true;px=e.clientX;py=e.clientY;diag.classList.add('grabbing');e.preventDefault();});
+    window.addEventListener('mouseup',()=>{drag=false;diag.classList.remove('grabbing');});
+    window.addEventListener('mousemove',e=>{ if(!drag)return; const r=viz.getBoundingClientRect();
+      const v=getVB(); if(!v)return;
+      v[0]-=(e.clientX-px)*(v[2]/r.width); v[1]-=(e.clientY-py)*(v[3]/r.height);
+      setVB(v); px=e.clientX; py=e.clientY; });
+    const q=c=>step.querySelector(c);
+    q('.zin').onclick=()=>zoomAt(0.8333,0.5,0.5);
+    q('.zout').onclick=()=>zoomAt(1.2,0.5,0.5);
+    q('.zfit').onclick=()=>{ if(ensureBase()) setVB(base.slice()); };
+  });
+  // clic en un nodo del rail → primer paso de esa sección
+  nodeEls.forEach((nd,si)=>nd.onclick=()=>{ const j=STEPS.findIndex(s=>s.sec===si); if(j>=0)show(j); });
+  document.getElementById('next').onclick=()=>show(cur+1);
+  document.getElementById('prev').onclick=()=>show(cur-1);
+  document.getElementById('focus').onclick=()=>{ if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen(); };
+  window.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' ')show(cur+1);
+    else if(e.key==='ArrowLeft')show(cur-1);
+    else if(e.key==='f'||e.key==='F')document.getElementById('focus').click();
+  });
+  window.addEventListener('load',()=>show(0));
+</script>
+</body></html>
