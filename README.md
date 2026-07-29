@@ -6,6 +6,8 @@
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/estado-en_decisi%C3%B3n_t%C3%A9cnica-yellow" alt="Estado"></a>
   <a href="#"><img src="https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://github.com/MaximilianoRodrigoSoria/project-trucha/commits"><img src="https://img.shields.io/github/last-commit/MaximilianoRodrigoSoria/project-trucha?label=%C3%BAltimo%20commit&color=06C69C" alt="Último commit"></a>
+  <a href="https://github.com/MaximilianoRodrigoSoria/project-trucha/stargazers"><img src="https://img.shields.io/github/stars/MaximilianoRodrigoSoria/project-trucha?color=02ECB6" alt="Stars"></a>
   <a href="#"><img src="https://img.shields.io/badge/storage-SQLite_+_FTS5-003B57?logo=sqlite&logoColor=white" alt="SQLite FTS5"></a>
   <a href="#"><img src="https://img.shields.io/badge/b%C3%BAsqueda-h%C3%ADbrida_(l%C3%A9xica_+_vectorial)-06C69C" alt="Búsqueda híbrida"></a>
   <a href="#"><img src="https://img.shields.io/badge/licencia-MIT-brightgreen" alt="MIT"></a>
@@ -22,6 +24,24 @@ Toolkit colaborativo y open source para dotar a los agentes de código de **memo
 > **Estado:** en etapa de decisión técnica. La arquitectura de almacenamiento todavía está abierta — ver [Decisión técnica: backend de memoria](#decisión-técnica-backend-de-memoria). Este README documenta la intención del proyecto y las opciones bajo evaluación, no un diseño cerrado.
 
 > 📊 **Deck de presentación:** abrí [`docs/slides/index.html`](docs/slides/index.html) en el navegador para un recorrido navegable (← →) por qué vamos a construir y las decisiones técnicas — con diagramas de flujo animados. También disponible como artifact en Cowork.
+
+---
+
+## Contenido
+
+- [¿Qué es project-trucha?](#qué-es-project-trucha)
+- [Filosofía: la trucha](#filosofía-la-trucha-)
+- [Alcance (MVP tentativo)](#alcance-mvp-tentativo)
+- [Arquitectura tentativa](#arquitectura-tentativa)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Decisión técnica: backend de memoria](#decisión-técnica-backend-de-memoria)
+- [Instalación y uso (previsto)](#instalación-y-uso-previsto)
+- [Documentación](#documentación)
+- [Cómo contribuir](#cómo-contribuir)
+- [Roadmap](#roadmap)
+- [Stack tentativo](#stack-tentativo)
+- [Equipo](#equipo)
+- [Licencia](#licencia)
 
 ---
 
@@ -105,6 +125,31 @@ project-trucha
 
 ---
 
+## Estructura del repositorio
+
+```text
+project-trucha/
+├── src/trucha/          # paquete principal (capas desacopladas)
+│   ├── ingest/          # descubre, trocea y normaliza el repo
+│   ├── embed/           # genera embeddings del contenido
+│   ├── store/           # capa de persistencia — DECISIÓN TÉCNICA ABIERTA
+│   ├── retrieve/        # consulta léxica + vectorial y fusiona (hybrid ranking)
+│   └── interface/       # CLI + API + (futuro) servidor MCP
+├── docs/
+│   ├── adr/             # Architecture Decision Records
+│   ├── img/             # logo, avatares y assets
+│   └── slides/          # deck de presentación (index.html)
+├── tests/               # suite de pruebas
+├── scripts/             # utilidades de desarrollo
+├── pyproject.toml       # metadata y build (layout src/)
+├── .gitignore
+└── README.md
+```
+
+El código vive bajo un **layout `src/`** (`pyproject.toml` con `setuptools`), y cada capa de `src/trucha` es un paquete propio que depende de `store` sólo por su interfaz.
+
+---
+
 ## Decisión técnica: backend de memoria
 
 > Esta sección es una **decisión en curso**, no una conclusión cerrada. Documenta las opciones que estamos evaluando y el criterio con el que las comparamos. Se cerrará en un ADR cuando el equipo converja.
@@ -151,6 +196,51 @@ Cuando converjamos, la decisión se documenta como **ADR-0001** en `docs/adr/`.
 
 ---
 
+## Instalación y uso (previsto)
+
+> ⚠️ **Work in progress.** El núcleo todavía no está implementado — estamos en la [decisión técnica](#decisión-técnica-backend-de-memoria). Esta es la interfaz que buscamos ofrecer; los nombres son tentativos y se congelan al cerrar la interfaz de `store` (Fase 1).
+
+Instalación pensada una vez publicado el núcleo:
+
+```bash
+pip install trucha
+```
+
+Uso previsto desde la **CLI**:
+
+```bash
+trucha index .                                   # indexa el repo actual
+trucha search "dónde se valida el token"         # búsqueda híbrida (léxica + semántica)
+trucha update                                    # reindexa sólo lo que cambió
+```
+
+Y como **librería**, desde un agente:
+
+```python
+from trucha import Memory
+
+mem = Memory.open(".trucha/index.db")            # un archivo, sin servidor
+hits = mem.search("flujo de checkout", k=8, hybrid=True)
+for h in hits:
+    print(h.path, h.score, h.snippet)
+```
+
+### Requisitos previstos
+
+- **Python 3.11+**
+- SQLite con **FTS5** (incluido en la mayoría de las builds de Python) — *sujeto a la decisión de backend*
+- Opcional: modelo de embeddings local o vía API para la búsqueda semántica
+
+---
+
+## Documentación
+
+- 📊 **[Deck de presentación](docs/slides/index.html)** — qué construimos y las decisiones técnicas, navegable y con diagramas de flujo (abrir en el navegador).
+- 🧭 **[Decisiones de arquitectura (ADR)](docs/adr/)** — el registro de decisiones de diseño; la primera pendiente de cerrar es el backend de memoria (**ADR-0001**).
+- 🐟 **[Filosofía del proyecto](#filosofía-la-trucha-)** — por qué "trucha" y qué implica para el diseño.
+
+---
+
 ## Cómo contribuir
 
 project-trucha es colaborativo por diseño: la superficie es chica a propósito para que sea fácil sumar.
@@ -190,6 +280,28 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 
 ---
 
+## Equipo
+
+<table align="center">
+  <tr>
+    <td align="center" width="250">
+      <img src="docs/img/maximiliano.png" width="140" alt="Maximiliano Soria"><br><br>
+      <strong>Maximiliano Soria</strong><br>
+      <sub>Arquitecto de Software · Backend Java + Spring</sub><br>
+      <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">LinkedIn</a> · <a href="https://github.com/MaximilianoRodrigoSoria">GitHub</a>
+    </td>
+    <td align="center" width="250">
+      <img src="docs/img/gerardo.png" width="140" alt="Gerardo"><br><br>
+      <strong>Gerardo</strong><br>
+      <sub>Colaborador · Desarrollo &amp; Arquitectura</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center"><sub>Con <strong>Gerald</strong> 🤖 como par de IA · <em>"te quiero mucho como la trucha al trucho"</em></sub></p>
+
+---
+
 ## Licencia
 
 Distribuido bajo licencia **MIT**. Ver `LICENSE` (pendiente de agregar) para más detalle.
@@ -197,6 +309,6 @@ Distribuido bajo licencia **MIT**. Ver `LICENSE` (pendiente de agregar) para má
 ---
 
 <p align="center">
-  Hecho con 🐟 por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a>, <a href="https://github.com/gerardo-lopez-dev"><strong>Gerardo</strong></a> y <strong>Gerald</strong> 🤖<br>
+  Hecho con 🐟 por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a>, <strong>Gerardo</strong> y <strong>Gerald</strong> 🤖<br>
   <sub>Proyecto colaborativo · Memoria persistente para agentes de código</sub>
 </p>
