@@ -295,6 +295,7 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
       <strong>Gerardo</strong><br>
       <sub>Colaborador · Desarrollo &amp; Arquitectura</sub><br>
       <a href="https://github.com/gerardo-lopez-dev">GitHub</a>
+      <a href="https://www.linkedin.com/in/gerardo-alexis-lopez-mongelos-4a04a51b1/">LinkedIn</a>
     </td>
   </tr>
 </table>
