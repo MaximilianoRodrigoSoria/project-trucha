@@ -194,6 +194,6 @@ Distribuido bajo licencia **MIT**. Ver `LICENSE` (pendiente de agregar) para má
 ---
 
 <p align="center">
-  Hecho con 🐟 por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a>, <strong>Gerardo</strong> y <strong>Gerald</strong> 🤖<br>
+  Hecho con 🐟 por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a>, <a href="https://github.com/gerardo-lopez-dev"><strong>Gerardo</strong></a> y <strong>Gerald</strong> 🤖<br>
   <sub>Proyecto colaborativo · Memoria persistente para agentes de código</sub>
 </p>
