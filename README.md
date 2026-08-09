@@ -40,6 +40,7 @@ Toolkit colaborativo y open source para dotar a los agentes de código de **memo
 - [Cómo contribuir](#cómo-contribuir)
 - [Roadmap](#roadmap)
 - [Stack tentativo](#stack-tentativo)
+- [Alternativas para el stack](#alternativas-para-el-stack)
 - [Equipo](#equipo)
 - [Licencia](#licencia)
 
@@ -243,6 +244,7 @@ el mismo resultado con `trucha hola-mundo`.
 - 📊 **[Deck de presentación](docs/slides/index.html)** — qué construimos y las decisiones técnicas, navegable y con diagramas de flujo (abrir en el navegador).
 - 🔌 **[Conectar Codex, Claude Code y OpenCode](docs/conectar-agentes.md)** — instalación, configuración MCP y prueba de “hola mundo”.
 - 🗺️ **[Mapa narrado](docs/01-mapa-project-trucha.html)** — arquitectura y estado real del proyecto, con audio y efectos interactivos.
+- 🧪 **[Alternativas para el stack](docs/alternativas-stack.md)** — seis arquitecturas posibles con ventajas, riesgos y criterios de decisión.
 - 🧭 **[Decisiones de arquitectura (ADR)](docs/adr/)** — el registro de decisiones de diseño; la primera pendiente de cerrar es el backend de memoria (**ADR-0001**).
 - 🐟 **[Filosofía del proyecto](#filosofía-la-trucha-)** — por qué "trucha" y qué implica para el diseño.
 
@@ -282,8 +284,15 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 - **Lenguaje:** Python 3.11+
 - **Storage:** SQLite + FTS5 (+ sqlite-vec) — *sujeto a la decisión técnica*
 - **Embeddings:** modelo configurable (local o vía API)
-- **Interfaz:** CLI + API + servidor MCP (futuro)
+- **Interfaz:** CLI + servidor MCP funcional; API de memoria pendiente
 - **Licencia:** MIT
+
+### Alternativas para el stack
+
+> [!WARNING]
+> **Revisión pendiente de Gerard y Yoel:** antes de desarrollar el núcleo,
+> comparen las seis propuestas y documenten la elección en el ADR-0001.
+> Ver **[Alternativas para el stack](docs/alternativas-stack.md)**.
 
 ---
 
@@ -298,11 +307,19 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
       <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">LinkedIn</a> · <a href="https://github.com/MaximilianoRodrigoSoria">GitHub</a>
     </td>
     <td align="center" width="250">
-      <img src="docs/img/gerardo.png" width="140" alt="Gerardo"><br><br>
-      <strong>Gerardo</strong><br>
-      <sub>Colaborador · Desarrollo &amp; Arquitectura</sub><br>
+      <img src="docs/img/gerardo.png" width="140" alt="Gerard"><br><br>
+      <strong>Gerard</strong><br>
+      <sub>Desarrollador · Arquitectura</sub><br>
       <a href="https://github.com/gerardo-lopez-dev">GitHub</a>
       <a href="https://www.linkedin.com/in/gerardo-alexis-lopez-mongelos-4a04a51b1/">LinkedIn</a>
+    </td>
+    <td align="center" width="250">
+      <a href="https://www.linkedin.com/in/yoelenriquez/">
+        <img src="docs/img/yoel.png" width="140" alt="Yoel Enriquez">
+      </a><br><br>
+      <strong>Yoel Enriquez</strong><br>
+      <sub>Desarrollador · Project Trucha</sub><br>
+      <a href="https://www.linkedin.com/in/yoelenriquez/">LinkedIn</a>
     </td>
   </tr>
 </table>
@@ -318,6 +335,6 @@ Distribuido bajo licencia **MIT**. Ver el archivo [`LICENSE`](LICENSE) para el t
 ---
 
 <p align="center">
-  Hecho con 🐟 por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a>, <a href="https://github.com/gerardo-lopez-dev"><strong>Gerardo</strong></a> y <strong>Gerald</strong> 🤖<br>
+  Diseñado por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a> y desarrollado por <a href="https://github.com/gerardo-lopez-dev"><strong>Gerard</strong></a> y <a href="https://www.linkedin.com/in/yoelenriquez/"><strong>Yoel</strong></a>, con <strong>Gerald</strong> 🤖<br>
   <sub>Proyecto colaborativo · Memoria persistente para agentes de código</sub>
 </p>
