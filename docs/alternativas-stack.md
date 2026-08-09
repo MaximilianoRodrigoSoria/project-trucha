@@ -43,6 +43,28 @@ Las seis alternativas buscan construir el mismo producto:
 **Componentes:** Python 3.11+, SQLite/FTS5, `sqlite-vec`, SDK MCP de Python,
 Typer o `argparse` para CLI.
 
+```mermaid
+flowchart LR
+    R["Repositorio local"] --> I["Python · walker y chunker"]
+    I --> L["SQLite FTS5 · índice léxico"]
+    I --> E["Modelo de embeddings"]
+    E --> V["sqlite-vec · índice vectorial"]
+    L --> F["Fusión híbrida · RRF"]
+    V --> F
+    F --> C["Core de Project Trucha"]
+    C --> CLI["CLI"]
+    C --> MCP["Servidor MCP stdio"]
+
+    classDef input fill:#143A7E,color:#fff,stroke:#5B9BD5,stroke-width:2px;
+    classDef process fill:#075985,color:#fff,stroke:#22D3EE,stroke-width:2px;
+    classDef storage fill:#064E3B,color:#fff,stroke:#02ECB6,stroke-width:2px;
+    classDef output fill:#4C1D95,color:#fff,stroke:#C4B5FD,stroke-width:2px;
+    class R input;
+    class I,E,F,C process;
+    class L,V storage;
+    class CLI,MCP output;
+```
+
 ### Pros
 
 - Menor cambio respecto del scaffold actual.
@@ -63,6 +85,29 @@ Typer o `argparse` para CLI.
 
 **Componentes:** TypeScript, Node.js, LanceDB embebido, SDK MCP de TypeScript,
 Commander o oclif para CLI.
+
+```mermaid
+flowchart LR
+    R["Repositorio local"] --> N["Node.js · TypeScript"]
+    N --> P["Parser y chunker"]
+    P --> L["LanceDB · full-text"]
+    P --> E["Proveedor de embeddings"]
+    E --> V["LanceDB · vectores"]
+    L --> H["Búsqueda híbrida"]
+    V --> H
+    H --> S["Servicio TypeScript"]
+    S --> CLI["Commander / oclif"]
+    S --> MCP["SDK MCP TypeScript"]
+
+    classDef input fill:#1E3A8A,color:#fff,stroke:#60A5FA,stroke-width:2px;
+    classDef process fill:#164E63,color:#fff,stroke:#22D3EE,stroke-width:2px;
+    classDef storage fill:#0F766E,color:#fff,stroke:#5EEAD4,stroke-width:2px;
+    classDef output fill:#581C87,color:#fff,stroke:#E879F9,stroke-width:2px;
+    class R input;
+    class N,P,E,H,S process;
+    class L,V storage;
+    class CLI,MCP output;
+```
 
 ### Pros
 
@@ -85,6 +130,28 @@ Commander o oclif para CLI.
 **Componentes:** Rust, Tantivy para índice invertido, Qdrant Edge para vectores,
 SDK MCP de Rust, Clap para CLI.
 
+```mermaid
+flowchart LR
+    R["Repositorio local"] --> W["Rust · scanner paralelo"]
+    W --> T["Tantivy · índice invertido"]
+    W --> E["Runtime de embeddings"]
+    E --> Q["Qdrant Edge · vectores"]
+    T --> F["Fusión y reranking"]
+    Q --> F
+    F --> B["Binario Project Trucha"]
+    B --> CLI["Clap CLI"]
+    B --> MCP["Servidor MCP Rust"]
+
+    classDef input fill:#431407,color:#fff,stroke:#FB923C,stroke-width:2px;
+    classDef process fill:#7C2D12,color:#fff,stroke:#FDBA74,stroke-width:2px;
+    classDef storage fill:#3F6212,color:#fff,stroke:#A3E635,stroke-width:2px;
+    classDef output fill:#312E81,color:#fff,stroke:#A5B4FC,stroke-width:2px;
+    class R input;
+    class W,E,F,B process;
+    class T,Q storage;
+    class CLI,MCP output;
+```
+
 ### Pros
 
 - Binario portable, rápido y con bajo consumo en ejecución.
@@ -104,6 +171,29 @@ SDK MCP de Rust, Clap para CLI.
 
 **Componentes:** Kotlin, JVM 21+, Apache Lucene para texto y vectores, SDK MCP
 de Kotlin o implementación del protocolo, Clikt para CLI.
+
+```mermaid
+flowchart LR
+    R["Repositorio local"] --> K["Kotlin · JVM 21+"]
+    K --> P["Parser y chunker"]
+    P --> TXT["Lucene · BM25"]
+    P --> E["Modelo de embeddings"]
+    E --> KNN["Lucene · KNN vectors"]
+    TXT --> H["Consulta híbrida Lucene"]
+    KNN --> H
+    H --> D["Capa de dominio Kotlin"]
+    D --> CLI["Clikt CLI"]
+    D --> MCP["Adaptador MCP"]
+
+    classDef input fill:#4C1D95,color:#fff,stroke:#C4B5FD,stroke-width:2px;
+    classDef process fill:#831843,color:#fff,stroke:#F9A8D4,stroke-width:2px;
+    classDef storage fill:#1E3A8A,color:#fff,stroke:#93C5FD,stroke-width:2px;
+    classDef output fill:#134E4A,color:#fff,stroke:#5EEAD4,stroke-width:2px;
+    class R input;
+    class K,P,E,H,D process;
+    class TXT,KNN storage;
+    class CLI,MCP output;
+```
 
 ### Pros
 
@@ -125,6 +215,28 @@ de Kotlin o implementación del protocolo, Clikt para CLI.
 **Componentes:** Go, Bleve para full-text, Qdrant local o remoto para vectores,
 implementación MCP compatible, Cobra para CLI.
 
+```mermaid
+flowchart LR
+    R["Repositorio local"] --> G["Go · scanner concurrente"]
+    G --> B["Bleve · full-text"]
+    G --> E["Cliente de embeddings"]
+    E --> Q["Qdrant · vectores"]
+    B --> F["Rank fusion"]
+    Q --> F
+    F --> S["Servicio Go"]
+    S --> CLI["Cobra CLI"]
+    S --> MCP["Servidor MCP compatible"]
+
+    classDef input fill:#0C4A6E,color:#fff,stroke:#38BDF8,stroke-width:2px;
+    classDef process fill:#115E59,color:#fff,stroke:#2DD4BF,stroke-width:2px;
+    classDef storage fill:#365314,color:#fff,stroke:#A3E635,stroke-width:2px;
+    classDef output fill:#5B21B6,color:#fff,stroke:#C4B5FD,stroke-width:2px;
+    class R input;
+    class G,E,F,S process;
+    class B,Q storage;
+    class CLI,MCP output;
+```
+
 ### Pros
 
 - Compilación rápida y distribución sencilla como binario.
@@ -144,6 +256,30 @@ implementación MCP compatible, Cobra para CLI.
 
 **Componentes:** Python, FastAPI, PostgreSQL full-text, pgvector, SDK MCP de
 Python, Alembic para migraciones.
+
+```mermaid
+flowchart LR
+    R["Repositorios del equipo"] --> API["FastAPI · API de ingestión"]
+    API --> W["Workers de indexado"]
+    W --> TXT["PostgreSQL · full-text"]
+    W --> E["Servicio de embeddings"]
+    E --> V["pgvector · HNSW / IVFFlat"]
+    TXT --> SQL["Consulta híbrida SQL"]
+    V --> SQL
+    SQL --> CORE["Servicio Project Trucha"]
+    CORE --> MCP["Servidor MCP"]
+    CORE --> CLI["CLI remota"]
+    CORE --> TEAM["Gerard y Yoel"]
+
+    classDef input fill:#172554,color:#fff,stroke:#60A5FA,stroke-width:2px;
+    classDef process fill:#312E81,color:#fff,stroke:#A5B4FC,stroke-width:2px;
+    classDef storage fill:#581C87,color:#fff,stroke:#E879F9,stroke-width:2px;
+    classDef output fill:#064E3B,color:#fff,stroke:#34D399,stroke-width:2px;
+    class R input;
+    class API,W,E,SQL,CORE process;
+    class TXT,V storage;
+    class MCP,CLI,TEAM output;
+```
 
 ### Pros
 
