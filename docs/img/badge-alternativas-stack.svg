@@ -10,11 +10,8 @@
       <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.24"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-40%" width="140%" height="180%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#021d18" flood-opacity="0.4"/>
-    </filter>
   </defs>
-  <rect x="4" y="4" width="322" height="46" rx="23" fill="url(#surface)" filter="url(#shadow)"/>
+  <rect x="4" y="5" width="322" height="46" rx="23" fill="url(#surface)" stroke="#143A7E" stroke-width="1.5"/>
   <path d="M24 7h125c34 0 51 40 91 40H24c-12 0-18-8-18-20S12 7 24 7Z" fill="url(#shine)"/>
   <circle cx="31" cy="27" r="15" fill="#07120f" fill-opacity="0.76"/>
   <path d="M22 27c5-7 13-8 20 0-7 8-15 7-20 0Zm16 0 6-5v10Z" fill="#02ECB6"/>
