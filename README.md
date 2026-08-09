@@ -98,7 +98,7 @@ El primer objetivo es un núcleo mínimo y útil. Sujeto a cambios según la dec
 | **Búsqueda híbrida** | Fusión de ambos resultados (p. ej. reciprocal rank fusion) en una sola respuesta. |
 | **Memoria de decisiones** | Guardar notas / decisiones / ADRs asociadas a partes del código y recuperarlas por contexto. |
 | **Detección de cambios** | Reindexar sólo lo que cambió (por hash / mtime), no el repo entero. |
-| **Interfaz para agentes** | Una API/CLI simple (y, más adelante, un servidor MCP) que un agente pueda consumir. |
+| **Interfaz para agentes** | CLI y servidor MCP `stdio` funcionales; API de memoria, indexado y búsqueda quedan en el roadmap. |
 
 ---
 
@@ -196,46 +196,39 @@ Cuando converjamos, la decisión se documenta como **ADR-0001** en `docs/adr/`.
 
 ---
 
-## Instalación y uso (previsto)
+## Instalación y uso
 
-> ⚠️ **Work in progress.** El núcleo todavía no está implementado — estamos en la [decisión técnica](#decisión-técnica-backend-de-memoria). Esta es la interfaz que buscamos ofrecer; los nombres son tentativos y se congelan al cerrar la interfaz de `store` (Fase 1).
+> ⚠️ **Work in progress.** La CLI y el servidor MCP ya son funcionales como
+> scaffold de integración. El núcleo de indexado, almacenamiento y búsqueda
+> todavía depende de la [decisión técnica](#decisión-técnica-backend-de-memoria).
 
-Instalación pensada una vez publicado el núcleo:
-
-```bash
-pip install trucha
-```
-
-Uso previsto desde la **CLI**:
+Con Python 3.11 o superior:
 
 ```bash
-trucha index .                                   # indexa el repo actual
-trucha search "dónde se valida el token"         # búsqueda híbrida (léxica + semántica)
-trucha update                                    # reindexa sólo lo que cambió
+python -m venv .venv
+python -m pip install -e .
+trucha hello mundo --agent terminal
+trucha --json info
 ```
 
-Y como **librería**, desde un agente:
+El servidor MCP local puede iniciarse con cualquiera de estas órdenes:
 
-```python
-from trucha import Memory
-
-mem = Memory.open(".trucha/index.db")            # un archivo, sin servidor
-hits = mem.search("flujo de checkout", k=8, hybrid=True)
-for h in hits:
-    print(h.path, h.score, h.snippet)
+```bash
+trucha-mcp
+trucha mcp
 ```
 
-### Requisitos previstos
-
-- **Python 3.11+**
-- SQLite con **FTS5** (incluido en la mayoría de las builds de Python) — *sujeto a la decisión de backend*
-- Opcional: modelo de embeddings local o vía API para la búsqueda semántica
+Expone `trucha_hello` y `trucha_project_info` por `stdio`, sin red ni claves de
+API. La guía completa para Codex, Claude Code y OpenCode está en
+[`docs/conectar-agentes.md`](docs/conectar-agentes.md).
 
 ---
 
 ## Documentación
 
 - 📊 **[Deck de presentación](docs/slides/index.html)** — qué construimos y las decisiones técnicas, navegable y con diagramas de flujo (abrir en el navegador).
+- 🔌 **[Conectar Codex, Claude Code y OpenCode](docs/conectar-agentes.md)** — instalación, configuración MCP y prueba de “hola mundo”.
+- 🗺️ **[Mapa narrado](docs/project-trucha-mapa.html)** — arquitectura y estado real del proyecto, con audio local.
 - 🧭 **[Decisiones de arquitectura (ADR)](docs/adr/)** — el registro de decisiones de diseño; la primera pendiente de cerrar es el backend de memoria (**ADR-0001**).
 - 🐟 **[Filosofía del proyecto](#filosofía-la-trucha-)** — por qué "trucha" y qué implica para el diseño.
 

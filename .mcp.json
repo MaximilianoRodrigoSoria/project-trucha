@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "project-trucha": {
+      "type": "stdio",
+      "command": "trucha-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

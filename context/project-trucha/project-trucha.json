@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "project-trucha",
+  "service": {
+    "id": "project-trucha",
+    "name": "project-trucha",
+    "type": "python",
+    "repo_path": "C:\\Users\\maxim\\workspace\\github\\project-trucha",
+    "scanned_at": "2026-08-08T23:44:51.788084+00:00",
+    "endpoints": [],
+    "entities": [],
+    "dtos": [],
+    "components": [],
+    "topics_produced": [],
+    "topics_consumed": [],
+    "resumen": null,
+    "enrichment": {}
+  }
+}

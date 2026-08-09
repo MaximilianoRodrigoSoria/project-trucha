@@ -1,0 +1,15 @@
+Bienvenido al mapa de project-trucha.
+
+El proyecto propone una memoria persistente, local y liviana para agentes de codigo. Su objetivo es evitar que cada sesion tenga que redescubrir el repositorio desde cero.
+
+El flujo pensado empieza en ingest. Esa capa recorre archivos, respeta gitignore, divide el codigo en fragmentos y detecta cambios para reindexar solamente lo necesario.
+
+Despues aparece embed, que transforma esos fragmentos en vectores mediante un modelo configurable. Tanto el texto normalizado como sus vectores pasan por una interfaz estable hacia store.
+
+Store es la decision tecnica central que todavia esta abierta. La hipotesis actual combina SQLite, FTS cinco y sqlite vec para guardar texto, vectores, metadatos y decisiones en un unico archivo local.
+
+Retrieve consulta el indice lexico y el vectorial, y fusiona ambos rankings para producir una busqueda hibrida. Finalmente, interface expone esa memoria mediante una biblioteca de Python, una linea de comandos y, mas adelante, un servidor M C P para agentes.
+
+Hoy el repositorio esta en fase cero. La documentacion, el paquete y la separacion de capas existen, pero los modulos funcionales todavia son esqueletos. El proximo hito es cerrar el ADR cero cero cero uno sobre almacenamiento y congelar la interfaz de store.
+
+En resumen: project-trucha quiere ser local first, portable, incremental y colaborativo. El mapa que estas viendo separa el estado actual del diseño objetivo para mostrar con claridad que existe hoy y que falta construir.

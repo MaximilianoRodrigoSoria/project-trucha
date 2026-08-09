@@ -1,0 +1,18 @@
+{
+  "ecosystem": "project-trucha",
+  "generated_at": "2026-08-08T23:44:51.790084+00:00",
+  "service_count": 1,
+  "nodes": [
+    {
+      "id": "Service::project-trucha",
+      "label": "project-trucha",
+      "type": "Service",
+      "service_type": "python"
+    }
+  ],
+  "edges": [],
+  "shared_topics": [],
+  "gaps": {
+    "orphan_topics": []
+  }
+}

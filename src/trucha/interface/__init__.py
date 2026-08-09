@@ -1,1 +1,1 @@
-"""Interface: CLI + API + (futuro) servidor MCP para el agente."""
+"""Interfaces públicas de project-trucha: CLI y servidor MCP."""

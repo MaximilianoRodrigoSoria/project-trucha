@@ -32,6 +32,10 @@ data/
 .trucha/
 index/
 
+# ---- Contexto local de Magui ----
+# Regla del proyecto: se genera en cada entorno y nunca se versiona.
+ecosystem/
+
 # ---- Embeddings / modelos ----
 *.bin
 *.gguf
