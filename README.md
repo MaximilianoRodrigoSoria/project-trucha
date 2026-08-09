@@ -294,6 +294,12 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 > comparen las seis propuestas y documenten la elección en el ADR-0001.
 > Ver **[Alternativas para el stack](docs/alternativas-stack.md)**.
 
+<p align="center">
+  <a href="docs/alternativas-stack.md">
+    <img src="docs/img/badge-alternativas-stack.svg" width="330" alt="Explorar seis alternativas de stack">
+  </a>
+</p>
+
 ---
 
 ## Equipo
@@ -301,13 +307,13 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 <table align="center">
   <tr>
     <td align="center" width="250">
-      <img src="docs/img/maximiliano.png" width="140" alt="Maximiliano Soria"><br><br>
+      <img src="docs/img/maximiliano-round.png" width="140" height="140" alt="Maximiliano Soria"><br><br>
       <strong>Maximiliano Soria</strong><br>
       <sub>Arquitecto de Software · Backend Java + Spring</sub><br>
       <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">LinkedIn</a> · <a href="https://github.com/MaximilianoRodrigoSoria">GitHub</a>
     </td>
     <td align="center" width="250">
-      <img src="docs/img/gerardo.png" width="140" alt="Gerard"><br><br>
+      <img src="docs/img/gerardo-round.png" width="140" height="140" alt="Gerard"><br><br>
       <strong>Gerard</strong><br>
       <sub>Desarrollador · Arquitectura</sub><br>
       <a href="https://github.com/gerardo-lopez-dev">GitHub</a>
@@ -315,11 +321,12 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
     </td>
     <td align="center" width="250">
       <a href="https://www.linkedin.com/in/yoelenriquez/">
-        <img src="docs/img/yoel.png" width="140" alt="Yoel Enriquez">
+        <img src="docs/img/yoel-round.png" width="140" height="140" alt="Yoel Enriquez">
       </a><br><br>
       <strong>Yoel Enriquez</strong><br>
       <sub>Desarrollador · Project Trucha</sub><br>
-      <a href="https://www.linkedin.com/in/yoelenriquez/">LinkedIn</a>
+      <a href="https://www.linkedin.com/in/yoelenriquez/">LinkedIn</a> ·
+      <a href="https://github.com/yoelenriquez">GitHub</a>
     </td>
   </tr>
 </table>
