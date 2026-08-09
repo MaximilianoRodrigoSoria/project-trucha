@@ -6,6 +6,17 @@
 > núcleo deben acordar qué optimizar primero: simplicidad local, velocidad,
 > familiaridad del equipo o capacidad de crecer como servicio.
 
+<p align="center">
+  <a href="#1-python--sqlite-fts5--sqlite-vec"><img src="img/stack-python-sqlite.svg" width="190" alt="Python y SQLite"></a>
+  <a href="#2-typescript--nodejs--lancedb"><img src="img/stack-typescript-lancedb.svg" width="190" alt="TypeScript y LanceDB"></a>
+  <a href="#3-rust--tantivy--qdrant-edge"><img src="img/stack-rust-tantivy.svg" width="190" alt="Rust y Tantivy"></a>
+</p>
+<p align="center">
+  <a href="#4-kotlinjvm--apache-lucene"><img src="img/stack-kotlin-lucene.svg" width="190" alt="Kotlin y Lucene"></a>
+  <a href="#5-go--bleve--qdrant"><img src="img/stack-go-bleve.svg" width="190" alt="Go y Bleve"></a>
+  <a href="#6-python--fastapi--postgresql--pgvector"><img src="img/stack-python-pgvector.svg" width="190" alt="Python y pgvector"></a>
+</p>
+
 ## Objetivo común
 
 Las seis alternativas buscan construir el mismo producto:

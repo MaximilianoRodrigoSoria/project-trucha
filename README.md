@@ -306,20 +306,20 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 
 <table align="center">
   <tr>
-    <td align="center" width="250">
+    <td align="center" valign="top" width="250">
       <img src="docs/img/maximiliano-round.png" width="140" height="140" alt="Maximiliano Soria"><br><br>
       <strong>Maximiliano Soria</strong><br>
       <sub>Arquitecto de Software · Backend Java + Spring</sub><br>
       <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">LinkedIn</a> · <a href="https://github.com/MaximilianoRodrigoSoria">GitHub</a>
     </td>
-    <td align="center" width="250">
+    <td align="center" valign="top" width="250">
       <img src="docs/img/gerardo-round.png" width="140" height="140" alt="Gerard"><br><br>
       <strong>Gerard</strong><br>
       <sub>Desarrollador · Arquitectura</sub><br>
       <a href="https://github.com/gerardo-lopez-dev">GitHub</a>
       <a href="https://www.linkedin.com/in/gerardo-alexis-lopez-mongelos-4a04a51b1/">LinkedIn</a>
     </td>
-    <td align="center" width="250">
+    <td align="center" valign="top" width="250">
       <a href="https://www.linkedin.com/in/yoelenriquez/">
         <img src="docs/img/yoel-round.png" width="140" height="140" alt="Yoel Enriquez">
       </a><br><br>
