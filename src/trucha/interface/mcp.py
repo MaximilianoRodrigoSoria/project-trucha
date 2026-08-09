@@ -38,6 +38,15 @@ TOOLS = [
     },
 ]
 
+PROMPTS = [
+    {
+        "name": "hola-mundo",
+        "title": "Bienvenida a project-trucha",
+        "description": "Mensaje inicial para comprobar que el agente cargó el proyecto.",
+        "arguments": [],
+    }
+]
+
 
 def _result(payload: dict[str, object]) -> dict[str, object]:
     return {
@@ -57,7 +66,10 @@ def handle(request: dict[str, Any]) -> dict[str, Any] | None:
     if method == "initialize":
         result = {
             "protocolVersion": PROTOCOL_VERSION,
-            "capabilities": {"tools": {"listChanged": False}},
+            "capabilities": {
+                "tools": {"listChanged": False},
+                "prompts": {"listChanged": False},
+            },
             "serverInfo": {"name": "project-trucha", "version": __version__},
             "instructions": INSTRUCTIONS,
         }
@@ -65,6 +77,26 @@ def handle(request: dict[str, Any]) -> dict[str, Any] | None:
         result = {}
     elif method == "tools/list":
         result = {"tools": TOOLS}
+    elif method == "prompts/list":
+        result = {"prompts": PROMPTS}
+    elif method == "prompts/get":
+        params = request.get("params") or {}
+        if params.get("name") != "hola-mundo":
+            return _error(
+                request_id, -32602, f"Prompt desconocido: {params.get('name')}"
+            )
+        result = {
+            "description": "Bienvenida inicial de project-trucha",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": "Hola truchos, bienvenidos a project-trucha",
+                    },
+                }
+            ],
+        }
     elif method == "tools/call":
         params = request.get("params") or {}
         arguments = params.get("arguments") or {}

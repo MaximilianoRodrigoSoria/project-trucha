@@ -20,6 +20,9 @@ class McpTests(unittest.TestCase):
         self.assertEqual(
             response["result"]["capabilities"]["tools"], {"listChanged": False}
         )
+        self.assertEqual(
+            response["result"]["capabilities"]["prompts"], {"listChanged": False}
+        )
 
     def test_hello_tool_returns_structured_content(self) -> None:
         response = handle(
@@ -50,6 +53,19 @@ class McpTests(unittest.TestCase):
             {tool["name"] for tool in response["result"]["tools"]},
             {"trucha_hello", "trucha_project_info"},
         )
+
+    def test_hola_mundo_prompt_returns_welcome_message(self) -> None:
+        response = handle(
+            {
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "prompts/get",
+                "params": {"name": "hola-mundo", "arguments": {}},
+            }
+        )
+
+        message = response["result"]["messages"][0]["content"]["text"]
+        self.assertEqual(message, "Hola truchos, bienvenidos a project-trucha")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Conectar project-trucha con agentes de terminal
 
-Esta guía deja a Joel y Gerard con una instalación mínima funcional para usar
+Esta guía deja a Yoel y Gerard con una instalación mínima funcional para usar
 project-trucha desde la terminal o como servidor MCP local. No requiere Docker,
 servicios remotos ni claves de API.
 
@@ -39,6 +39,12 @@ trucha --json info
 
 La primera orden debe responder que la memoria de project-trucha está despierta.
 
+También se puede probar la bienvenida compartida:
+
+```bash
+trucha hola-mundo
+```
+
 ## 2. Conectar Codex
 
 Codex acepta servidores MCP locales por `stdio`:
@@ -52,6 +58,13 @@ Dentro de Codex, ejecutar `/mcp` y pedir:
 
 ```text
 Usá trucha_hello para saludar a Joel desde Codex.
+```
+
+O ejecutar `/hola-mundo` y seleccionar el prompt MCP `hola-mundo` de
+`project-trucha`. La respuesta esperada es:
+
+```text
+Hola truchos, bienvenidos a project-trucha
 ```
 
 Codex CLI, la aplicación de escritorio y la extensión comparten la misma
@@ -108,6 +121,9 @@ Usá la herramienta trucha_hello y saludá a Joel desde OpenCode.
 |---|---|
 | `trucha_hello` | Comprueba la conexión y devuelve un saludo estructurado. |
 | `trucha_project_info` | Devuelve versión, interfaces y capacidades actuales. |
+
+El servidor también publica el prompt MCP `hola-mundo`, pensado como bienvenida
+rápida para verificar la importación del proyecto.
 
 La implementación está en `src/trucha/interface/mcp.py`. Usa JSON-RPC por
 entrada/salida estándar y no accede a la red ni ejecuta comandos recibidos del

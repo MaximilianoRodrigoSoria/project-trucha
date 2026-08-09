@@ -208,6 +208,7 @@ Con Python 3.11 o superior:
 python -m venv .venv
 python -m pip install -e .
 trucha hello mundo --agent terminal
+trucha hola-mundo
 trucha --json info
 ```
 
@@ -222,13 +223,26 @@ Expone `trucha_hello` y `trucha_project_info` por `stdio`, sin red ni claves de
 API. La guía completa para Codex, Claude Code y OpenCode está en
 [`docs/conectar-agentes.md`](docs/conectar-agentes.md).
 
+### Primer saludo desde el agente
+
+Después de conectar el servidor MCP, ejecutar `/hola-mundo` desde el cliente.
+Project Trucha responde:
+
+```text
+Hola truchos, bienvenidos a project-trucha
+```
+
+Si el cliente muestra los prompts MCP con un prefijo propio, seleccionar el
+prompt `hola-mundo` del servidor `project-trucha`. Desde una terminal se obtiene
+el mismo resultado con `trucha hola-mundo`.
+
 ---
 
 ## Documentación
 
 - 📊 **[Deck de presentación](docs/slides/index.html)** — qué construimos y las decisiones técnicas, navegable y con diagramas de flujo (abrir en el navegador).
 - 🔌 **[Conectar Codex, Claude Code y OpenCode](docs/conectar-agentes.md)** — instalación, configuración MCP y prueba de “hola mundo”.
-- 🗺️ **[Mapa narrado](docs/project-trucha-mapa.html)** — arquitectura y estado real del proyecto, con audio local.
+- 🗺️ **[Mapa narrado](docs/01-mapa-project-trucha.html)** — arquitectura y estado real del proyecto, con audio y efectos interactivos.
 - 🧭 **[Decisiones de arquitectura (ADR)](docs/adr/)** — el registro de decisiones de diseño; la primera pendiente de cerrar es el backend de memoria (**ADR-0001**).
 - 🐟 **[Filosofía del proyecto](#filosofía-la-trucha-)** — por qué "trucha" y qué implica para el diseño.
 

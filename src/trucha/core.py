@@ -38,4 +38,5 @@ def project_info() -> dict[str, object]:
         "status": "scaffold funcional",
         "interfaces": ["CLI", "MCP stdio"],
         "tools": ["trucha_hello", "trucha_project_info"],
+        "prompts": ["hola-mundo"],
     }

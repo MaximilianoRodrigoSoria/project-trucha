@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     hello_parser.add_argument("name", nargs="?", default="mundo")
     hello_parser.add_argument("--agent", default="terminal")
     commands.add_parser("info", help="muestra capacidades disponibles")
+    commands.add_parser("hola-mundo", help="muestra la bienvenida del proyecto")
     commands.add_parser("mcp", help="inicia el servidor MCP por stdio")
     return parser
 
@@ -31,6 +32,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         from trucha.interface.mcp import run
 
         return run()
+
+    if args.command == "hola-mundo":
+        print("Hola truchos, bienvenidos a project-trucha")
+        return 0
 
     result = (
         hello(name=args.name, agent=args.agent)
