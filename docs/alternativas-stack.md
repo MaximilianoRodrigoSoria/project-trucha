@@ -1,7 +1,7 @@
 # Alternativas para el stack de Project Trucha
 
 > [!WARNING]
-> **Decisión pendiente para Gerard y Yoel.** Este documento compara caminos
+> **Decisión pendiente para Gerardo Lopez y Yoel.** Este documento compara caminos
 > posibles, pero no reemplaza el ADR de arquitectura. Antes de implementar el
 > núcleo deben acordar qué optimizar primero: simplicidad local, velocidad,
 > familiaridad del equipo o capacidad de crecer como servicio.
@@ -123,7 +123,7 @@ flowchart LR
   concreta del camino elegido en LanceDB.
 - El ecosistema npm amplía la superficie de mantenimiento y supply chain.
 
-**Elegirla si:** Gerard y Yoel quieren priorizar integración con agentes y web.
+**Elegirla si:** Gerardo Lopez y Yoel quieren priorizar integración con agentes y web.
 
 ## 3. Rust + Tantivy + Qdrant Edge
 
@@ -269,7 +269,7 @@ flowchart LR
     SQL --> CORE["Servicio Project Trucha"]
     CORE --> MCP["Servidor MCP"]
     CORE --> CLI["CLI remota"]
-    CORE --> TEAM["Gerard y Yoel"]
+    CORE --> TEAM["Gerardo Lopez y Yoel"]
 
     classDef input fill:#172554,color:#fff,stroke:#60A5FA,stroke-width:2px;
     classDef process fill:#312E81,color:#fff,stroke:#A5B4FC,stroke-width:2px;
@@ -312,7 +312,7 @@ flowchart LR
 4. ¿Los embeddings deben generarse completamente offline?
 5. ¿Qué pesa más: recall, latencia, tamaño o simplicidad operativa?
 6. ¿El servidor MCP será siempre local o también remoto?
-7. ¿Qué stack pueden mantener Gerard y Yoel durante los próximos doce meses?
+7. ¿Qué stack pueden mantener Gerardo Lopez y Yoel durante los próximos doce meses?
 
 ## Fuentes técnicas
 

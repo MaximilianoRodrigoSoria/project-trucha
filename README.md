@@ -290,7 +290,7 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 ### Alternativas para el stack
 
 > [!WARNING]
-> **Revisión pendiente de Gerard y Yoel:** antes de desarrollar el núcleo,
+> **Revisión pendiente de Gerardo Lopez y Yoel:** antes de desarrollar el núcleo,
 > comparen las seis propuestas y documenten la elección en el ADR-0001.
 > Ver **[Alternativas para el stack](docs/alternativas-stack.md)**.
 
@@ -313,8 +313,8 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
       <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/">LinkedIn</a> · <a href="https://github.com/MaximilianoRodrigoSoria">GitHub</a>
     </td>
     <td align="center" valign="top" width="250">
-      <img src="docs/img/gerardo-round.png" width="140" height="140" alt="Gerard"><br><br>
-      <strong>Gerard</strong><br>
+      <img src="docs/img/gerardo-round.png" width="140" height="140" alt="Gerardo Lopez"><br><br>
+      <strong>Gerardo Lopez</strong><br>
       <sub>Desarrollador · Arquitectura</sub><br>
       <a href="https://github.com/gerardo-lopez-dev">GitHub</a>
       <a href="https://www.linkedin.com/in/gerardo-alexis-lopez-mongelos-4a04a51b1/">LinkedIn</a>
@@ -331,7 +331,7 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
   </tr>
 </table>
 
-<p align="center"><sub>Con <strong>Gerald</strong> 🤖 como par de IA · <em>"te quiero mucho como la trucha al trucho"</em></sub></p>
+<p align="center"><sub><em>"te quiero mucho como la trucha al trucho"</em></sub></p>
 
 ---
 
@@ -342,6 +342,6 @@ Distribuido bajo licencia **MIT**. Ver el archivo [`LICENSE`](LICENSE) para el t
 ---
 
 <p align="center">
-  Diseñado por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a> y desarrollado por <a href="https://github.com/gerardo-lopez-dev"><strong>Gerard</strong></a> y <a href="https://www.linkedin.com/in/yoelenriquez/"><strong>Yoel</strong></a>, con <strong>Gerald</strong> 🤖<br>
+  Diseñado por <a href="https://www.linkedin.com/in/soriamaximilianorodrigo/"><strong>Maximiliano Soria</strong></a> y desarrollado por <a href="https://github.com/gerardo-lopez-dev"><strong>Gerardo Lopez</strong></a> y <a href="https://www.linkedin.com/in/yoelenriquez/"><strong>Yoel</strong></a><br>
   <sub>Proyecto colaborativo · Memoria persistente para agentes de código</sub>
 </p>

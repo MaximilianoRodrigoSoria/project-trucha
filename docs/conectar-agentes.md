@@ -1,6 +1,6 @@
 # Conectar project-trucha con agentes de terminal
 
-Esta guía deja a Yoel y Gerard con una instalación mínima funcional para usar
+Esta guía deja a Yoel y Gerardo Lopez con una instalación mínima funcional para usar
 project-trucha desde la terminal o como servidor MCP local. No requiere Docker,
 servicios remotos ni claves de API.
 
@@ -96,7 +96,7 @@ claude mcp list
 Luego pedir:
 
 ```text
-Usá trucha_hello para saludar a Gerard desde Claude.
+Usá trucha_hello para saludar a Gerardo Lopez desde Claude.
 ```
 
 ## 4. Conectar OpenCode
