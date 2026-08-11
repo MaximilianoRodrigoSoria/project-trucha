@@ -36,6 +36,13 @@ index/
 # Regla del proyecto: se genera en cada entorno y nunca se versiona.
 ecosystem/
 
+# ---- Planificación local de features ----
+_planes/
+
+# ---- FastAPI / Docker ----
+.env
+postgres-data/
+
 # ---- Embeddings / modelos ----
 *.bin
 *.gguf

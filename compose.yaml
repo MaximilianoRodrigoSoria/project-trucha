@@ -1,0 +1,33 @@
+services:
+  db:
+    image: pgvector/pgvector:0.8.2-pg17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-trucha}
+      POSTGRES_USER: ${POSTGRES_USER:-trucha}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trucha-local}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trucha} -d ${POSTGRES_DB:-trucha}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    build: .
+    environment:
+      TRUCHA_ENVIRONMENT: ${TRUCHA_ENVIRONMENT:-development}
+      TRUCHA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trucha}:${POSTGRES_PASSWORD:-trucha-local}@db:5432/${POSTGRES_DB:-trucha}
+      TRUCHA_ALLOWED_ROOTS: ${TRUCHA_ALLOWED_ROOTS:-/workspace}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${TRUCHA_PORT:-8000}:8000"
+    volumes:
+      - .:/workspace/project-trucha:ro
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
