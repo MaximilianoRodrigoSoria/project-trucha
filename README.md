@@ -199,6 +199,12 @@ Cuando converjamos, la decisión se documenta como **ADR-0001** en `docs/adr/`.
 
 ## Instalación y uso
 
+> [!TIP]
+> **FastAPI + PostgreSQL/pgvector disponible:** la rama
+> `feature/maxi/fast-api` incluye indexado incremental, búsqueda híbrida,
+> memoria de decisiones y despliegue completo con Docker Compose. Consultá la
+> [guía de despliegue](docs/despliegue-fastapi.md).
+
 > ⚠️ **Work in progress.** La CLI y el servidor MCP ya son funcionales como
 > scaffold de integración. El núcleo de indexado, almacenamiento y búsqueda
 > todavía depende de la [decisión técnica](#decisión-técnica-backend-de-memoria).
@@ -245,6 +251,7 @@ el mismo resultado con `trucha hola-mundo`.
 - 🔌 **[Conectar Codex, Claude Code y OpenCode](docs/conectar-agentes.md)** — instalación, configuración MCP y prueba de “hola mundo”.
 - 🗺️ **[Mapa narrado](docs/01-mapa-project-trucha.html)** — arquitectura y estado real del proyecto, con audio y efectos interactivos.
 - 🧪 **[Alternativas para el stack](docs/alternativas-stack.md)** — seis arquitecturas posibles con ventajas, riesgos y criterios de decisión.
+- 🚀 **[Desplegar FastAPI + PostgreSQL/pgvector](docs/despliegue-fastapi.md)** — Docker Compose, migraciones, endpoints y operación.
 - 🧭 **[Decisiones de arquitectura (ADR)](docs/adr/)** — el registro de decisiones de diseño; la primera pendiente de cerrar es el backend de memoria (**ADR-0001**).
 - 🐟 **[Filosofía del proyecto](#filosofía-la-trucha-)** — por qué "trucha" y qué implica para el diseño.
 
