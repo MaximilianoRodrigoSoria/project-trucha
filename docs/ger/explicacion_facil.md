@@ -36,16 +36,18 @@ eso también queda anotado con la causa exacta.
 Simula la realidad de **la mayoría de los sistemas reales**: cada
 oficina anota las cosas como quiere. Una anota en un formato, otra en
 otro, algunas ni le ponen fecha, otras escriben mal la palabra "error"
-("Err", "ERROR", "errr"), y a veces alguien anota solo un garabato
-ilegible.
+("Err", "ERROR", "errr").
 
 Genera la misma clase de eventos (usuarios, pagos) pero mezclando:
-- **6 formatos distintos por línea** (como si mezclaras notas en
+- **5 formatos distintos por línea** (como si mezclaras notas en
   papel, mensajes de WhatsApp y capturas de pantalla, todo junto).
 - **Fechas escritas de formas distintas** (algunas sin año, algunas
   como número raro tipo `1786808830`).
-- **Sin ningún hilo conductor**: no hay forma directa de saber qué
-  anotación causó cuál otra, hay que adivinarlo.
+- **Toda línea lleva un traceId** (siempre, "por lo menos eso"), pero
+  el campo se escribe de mil formas distintas (`reqId`, `request_id`,
+  `trace`, `rid`, `corrId`, `tid`, `'trc'`...) y las líneas de una
+  misma transacción lo comparten: hay hilo conductor, pero hay que
+  encontrarlo entre el quilombo de formatos.
 
 **¿Por qué generar algo "malo" a propósito?** Porque si tu sistema de
 búsqueda solo funciona con datos prolijos, en la vida real no te va a

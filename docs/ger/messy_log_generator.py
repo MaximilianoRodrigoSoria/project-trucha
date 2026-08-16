@@ -1,12 +1,18 @@
 """
 messy_log_generator.py
-=======================
+======================
 Contraparte "sucia" de log_generator.py.
 
 Simula cómo son los logs en la mayoría de los sistemas reales: sin
 estándar, mezclando formatos, con campos faltantes, timestamps
 inconsistentes, niveles mal escritos, stack traces crudos pegados en
-una sola línea gigante, líneas corruptas, texto en dos idiomas, etc.
+una sola línea gigante, texto en dos idiomas, etc.
+
+Regla del sistema real simulado: TODA línea lleva al menos un traceId.
+Aunque el nombre del campo y el formato cambian por línea, el trace_id
+siempre está presente y es compartido por todas las líneas de la misma
+transacción (igual que en los logs prolijos), así el agrupamiento por
+traza funciona aunque haya que parsear formatos distintos.
 
 Reutiliza los mismos escenarios de negocio que log_generator.py
 (consulta de usuario / pago) para que después puedas comparar cómo se
@@ -27,6 +33,8 @@ SERVICES = ["api-gw", "authsvc", "cache", "db-primary", "payments", "fraud-chk",
             "ledger", "notif-worker", "gw-payments", "GATEWAY"]
 LEVELS_MESSY = ["INFO", "info", "Info", "WARN", "warning", "WARNING", "Warn",
                 "ERROR", "error", "Err", "ERR", "CRITICAL", "crit", "DEBUG", "debug", "trace"]
+
+TRACE_KEYS = ["reqId", "request_id", "trace", "rid", "corrId", "tid", "trace_id"]
 
 STACK_TRACE = (
     "Traceback (most recent call last): File \"payments.py\", line 233, in charge "
@@ -51,14 +59,6 @@ def rand_ts_variant():
     return fmt(base)
 
 
-def rand_id_maybe():
-    """A veces hay trace/request id, a veces no, y con nombres de campo distintos."""
-    if random.random() < 0.35:
-        return None
-    key = random.choice(["reqId", "request_id", "trace", "rid", "corrId"])
-    return f"{key}={uuid.uuid4().hex[:8]}"
-
-
 def garble(text, p=0.03):
     """Corrompe ocasionalmente un caracter para simular problemas de encoding."""
     chars = list(text)
@@ -69,25 +69,25 @@ def garble(text, p=0.03):
 
 
 # ---------------------------------------------------------------------------
-# Generadores de línea, cada uno con un formato distinto
+# Generadores de línea. TODOS reciben ctx con trace_id y lo emiten SIEMPRE,
+# con nombre de campo y ubicación distinta por formato.
 # ---------------------------------------------------------------------------
 def fmt_syslog(ctx):
     host = random.choice(["srv-web01", "srv-web02", "web-prod-3", "PROD-APP"])
     pid = random.randint(100, 9999)
     level = random.choice(LEVELS_MESSY)
     msg = ctx["msg"]
-    return f"{rand_ts_variant()} {host} {ctx['service']}[{pid}]: {level} {msg}"
+    trace = f"{random.choice(TRACE_KEYS)}={ctx['trace_id']}"
+    return f"{rand_ts_variant()} {host} {ctx['service']}[{pid}]: {level} {msg} {trace}"
 
 
 def fmt_logfmt(ctx):
     level = random.choice(["info", "warn", "error", "INFO", "ERR"])
+    trace = f"{random.choice(TRACE_KEYS)}={ctx['trace_id']}"
     parts = [f"time={rand_ts_variant().replace(' ', 'T')}", f"level={level}",
-              f"msg=\"{ctx['msg']}\"", f"svc={ctx['service']}"]
+              f"msg=\"{ctx['msg']}\"", f"svc={ctx['service']}", trace]
     if random.random() < 0.5:
         parts.append(f"user={ctx.get('user_id', '?')}")
-    rid = rand_id_maybe()
-    if rid:
-        parts.append(rid)
     random.shuffle(parts)  # el orden de los campos ni siquiera es consistente
     return " ".join(parts)
 
@@ -96,7 +96,9 @@ def fmt_sloppy_json(ctx):
     # JSON "casi" válido: a veces con comillas simples, comas colgantes,
     # campos faltantes o de más -> a propósito rompe el parser estándar.
     level = random.choice(LEVELS_MESSY)
-    base = f"{{'ts': '{rand_ts_variant()}', 'lvl': '{level}', 'message': '{ctx['msg']}'"
+    trace_key = random.choice(["trc", "trace_id", "requestId"])
+    base = (f"{{'ts': '{rand_ts_variant()}', 'lvl': '{level}', "
+            f"'message': '{ctx['msg']}', '{trace_key}': '{ctx['trace_id']}'")
     if random.random() < 0.6:
         base += f", 'usr': {ctx.get('user_id', 'null')}"
     if random.random() < 0.3:
@@ -107,108 +109,141 @@ def fmt_sloppy_json(ctx):
 
 def fmt_bare_print(ctx):
     level = random.choice(["DEBUG", "debug", "LOG", ">>>"])
-    return f"[{level}] {ctx['service']} :: {ctx['msg']} (user {ctx.get('user_id','?')})"
+    trace = f"{random.choice(TRACE_KEYS)}={ctx['trace_id']}"
+    return f"[{level}] {ctx['service']} :: {ctx['msg']} (user {ctx.get('user_id','?')}, {trace})"
 
 
 def fmt_stack_dump(ctx):
-    return f"{rand_ts_variant()} {ctx['service']} ERROR {ctx['msg']} :: {STACK_TRACE}"
-
-
-def fmt_noise(ctx):
-    """Basura pura: líneas truncadas, con encoding roto, o vacías de contenido útil."""
-    options = [
-        "",
-        "----",
-        "connection reset by peer",
-        garble(f"{ctx['service']} restart", p=0.25),
-        f"{rand_ts_variant()} ...",
-        f"WARNING WARNING WARNING low disk",
-        "null",
-        "{}",
-    ]
-    return random.choice(options)
+    trace = f"{random.choice(TRACE_KEYS)}={ctx['trace_id']}"
+    return f"{rand_ts_variant()} {ctx['service']} ERROR {ctx['msg']} {trace} :: {STACK_TRACE}"
 
 
 LINE_GENERATORS = [
-    (fmt_syslog, 0.28),
-    (fmt_logfmt, 0.20),
-    (fmt_sloppy_json, 0.20),
-    (fmt_bare_print, 0.15),
-    (fmt_stack_dump, 0.07),
-    (fmt_noise, 0.10),
+    (fmt_syslog, 0.30),
+    (fmt_logfmt, 0.22),
+    (fmt_sloppy_json, 0.22),
+    (fmt_bare_print, 0.16),
+    (fmt_stack_dump, 0.10),
 ]
 
 
 # ---------------------------------------------------------------------------
-# Contenido: mismos escenarios de negocio que log_generator.py, pero
-# escritos en frases sueltas, a veces en español, a veces en inglés,
-# sin ningún campo estructurado obligatorio.
+# Historias de negocio: cada una genera una transacción completa con un
+# trace_id compartido por todas sus líneas (mismos escenarios que
+# log_generator.py, pero escritos en frases sueltas y formatos mixtos).
 # ---------------------------------------------------------------------------
-GET_USER_MESSAGES = [
-    "GET /api/users/{uid} received",
-    "solicitud de usuario {uid} recibida",
-    "cache miss for user {uid}, hitting db",
-    "cache hit user {uid}",
-    "query users table for id {uid} took {lat}ms",
-    "usuario {uid} no encontrado en base de datos",
-    "auth token check ok for {uid}",
-    "auth token invalido, acceso denegado",
-    "response 200 sent for user {uid} in {lat}ms",
-    "db connection pool casi lleno, 48/50",
-    "timeout consultando db para usuario {uid}",
-    "unexpected error processing request /api/users/{uid}",
-]
-
-PAYMENT_MESSAGES = [
-    "POST /api/payments recibido, monto {amt}",
-    "payment request received amount={amt} user={uid}",
-    "fraud score {score} para transaccion de {uid}",
-    "saldo insuficiente para cuenta de usuario {uid}",
-    "enviando request a gateway de pago externo",
-    "gateway respondio timeout despues de 5000ms",
-    "pago autorizado id=pay_{pid}",
-    "pago rechazado por el emisor",
-    "asiento contable creado para pay_{pid}",
-    "notificacion encolada para user {uid}",
-    "worker no pudo consumir mensaje de la cola, reintentando",
-    "excepcion no controlada procesando el pago: NoneType has no attribute amount",
-]
-
-
-def build_ctx():
-    scenario = random.choice(["get", "get", "payment"])  # un poco más de trafico GET
-    uid = random.choice(USERS)
-    if scenario == "get":
-        msg = random.choice(GET_USER_MESSAGES).format(uid=uid, lat=random.randint(5, 900))
-        service = random.choice(["api-gw", "authsvc", "cache", "db-primary"])
+def get_story(uid, trace_id):
+    """Traza de una consulta GET /api/users/{id}, con algunos fallos posibles."""
+    lat = lambda: random.randint(5, 900)
+    roll = random.random()
+    if roll < 0.06:
+        steps = [
+            ("api-gw", f"GET /api/users/{uid} received"),
+            ("authsvc", "auth token invalido, acceso denegado"),
+            ("api-gw", f"response 401 sent for user {uid} in {lat()}ms"),
+        ]
+    elif roll < 0.12:
+        steps = [
+            ("api-gw", f"GET /api/users/{uid} received"),
+            ("authsvc", f"auth token check ok for {uid}"),
+            ("cache", f"cache miss for user {uid}, hitting db"),
+            ("db-primary", f"usuario {uid} no encontrado en base de datos"),
+            ("api-gw", f"response 404 sent for user {uid} in {lat()}ms"),
+        ]
     else:
-        msg = random.choice(PAYMENT_MESSAGES).format(
-            uid=uid, amt=round(random.uniform(5, 2000), 2),
-            score=round(random.uniform(0, 1), 2), pid=uuid.uuid4().hex[:8])
-        service = random.choice(["payments", "fraud-chk", "ledger", "notif-worker", "gw-payments"])
-    return {"msg": msg, "service": service, "user_id": uid}
+        if random.random() < 0.55:
+            db_step = ("cache", f"cache hit user {uid}")
+        else:
+            db_step = ("db-primary", f"query users table for id {uid} took {lat()}ms")
+        steps = [
+            ("api-gw", f"GET /api/users/{uid} received"),
+            ("authsvc", f"auth token check ok for {uid}"),
+            db_step,
+            ("api-gw", f"response 200 sent for user {uid} in {lat()}ms"),
+        ]
+    return steps
 
 
-def generate_line():
+def payment_story(uid, trace_id):
+    """Traza de un POST /api/payments, con fallos posibles (gateway, saldo)."""
+    amt = round(random.uniform(5, 2000), 2)
+    pid = uuid.uuid4().hex[:8]
+    score = round(random.uniform(0, 1), 2)
+    roll = random.random()
+    if roll < 0.07:
+        steps = [
+            ("payments", f"POST /api/payments recibido, monto {amt}"),
+            ("payments", "body invalido: campo 'amount' faltante"),
+            ("payments", f"response 400 sent in {random.randint(5, 30)}ms"),
+        ]
+    elif roll < 0.15:
+        steps = [
+            ("payments", f"payment request received amount={amt} user={uid}"),
+            ("fraud-chk", f"fraud score {score} para transaccion de {uid}"),
+            ("ledger", f"saldo insuficiente para cuenta de usuario {uid}"),
+            ("payments", f"response 402 sent in {random.randint(20, 80)}ms"),
+        ]
+    elif roll < 0.24:
+        steps = [
+            ("payments", f"payment request received amount={amt} user={uid}"),
+            ("fraud-chk", f"fraud score {score} para transaccion de {uid}"),
+            ("gw-payments", "enviando request a gateway de pago externo"),
+            ("gw-payments", "gateway respondio timeout despues de 5000ms"),
+            ("payments", "excepcion no controlada procesando el pago: NoneType has no attribute amount"),
+        ]
+    else:
+        steps = [
+            ("payments", f"POST /api/payments recibido, monto {amt}"),
+            ("fraud-chk", f"fraud score {score} para transaccion de {uid}"),
+            ("gw-payments", "enviando request a gateway de pago externo"),
+            ("gw-payments", f"pago autorizado id=pay_{pid}"),
+            ("ledger", f"asiento contable creado para pay_{pid}"),
+            ("notif-worker", f"notificacion encolada para user {uid}"),
+            ("payments", f"response 200 sent in {random.randint(200, 1200)}ms"),
+        ]
+    return steps
+
+
+def generate_trace():
+    """Una transacción completa: N líneas que comparten trace_id."""
+    uid = random.choice(USERS)
+    trace_id = uuid.uuid4().hex[:8]
+    if random.random() < 0.34:
+        steps = payment_story(uid, trace_id)
+    else:
+        steps = get_story(uid, trace_id)
+
+    lines = []
     gens, weights = zip(*LINE_GENERATORS)
-    gen = random.choices(gens, weights=weights, k=1)[0]
-    ctx = build_ctx()
-    return gen(ctx)
+    for service, msg in steps:
+        gen = random.choices(gens, weights=weights, k=1)[0]
+        ctx = {
+            "msg": garble(msg, 0.02),
+            "service": garble(service, 0.01),
+            "user_id": uid,
+            "trace_id": trace_id,
+        }
+        lines.append(gen(ctx))
+    return lines
 
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generador de logs desprolijos / inconsistentes")
-    parser.add_argument("--lines", type=int, default=2000)
+    parser.add_argument("--traces", type=int, default=400, help="Cantidad de transacciones (traces)")
     parser.add_argument("--output", type=str, default="/mnt/user-data/outputs/messy_logs.log")
     args = parser.parse_args()
 
     with open(args.output, "w", encoding="utf-8") as f:
-        for _ in range(args.lines):
-            f.write(generate_line() + "\n")
+        n_lines = 0
+        for _ in range(args.traces):
+            for line in generate_trace():
+                f.write(line + "\n")
+                n_lines += 1
 
-    print(f"Generadas {args.lines} lineas de logs desprolijos en {args.output}")
-    print("Formatos mezclados: syslog, logfmt, JSON invalido, print crudo, stack traces, ruido")
+    print(f"Generadas {n_lines} lineas ({args.traces} traces) de logs desprolijos en {args.output}")
+    print("Todas las lineas llevan traceId compartido por transaccion")
+    print("Formatos mezclados: syslog, logfmt, JSON invalido, print crudo, stack traces")
 
 
 if __name__ == "__main__":

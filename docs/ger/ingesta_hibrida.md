@@ -48,11 +48,12 @@ para no perder el rastro de qué tan confiable es cada registro.
 
 - **Logs limpios**: ya traen `trace_id` / `caused_by`, no hay nada que
   hacer.
-- **Logs desprolijos**: casi nunca hay trace_id. Hay que inferir
-  agrupación por heurística: mismo `user_id` + mismo `service` +
-  ventana de tiempo corta (ej. 2 segundos) → se asume que pertenecen
-  a la misma transacción. Esto es aproximado, no exacto, y hay que
-  documentarlo como tal.
+- **Logs desprolijos**: toda línea trae al menos un trace_id (siempre,
+  aunque con nombre de campo y formato distintos por línea), compartido
+  por las líneas de la misma transacción. Se agrupa directamente por
+  `trace_id` una vez extraído en el Paso 0. La heurística de antes
+  (mismo `user_id` + mismo `service` + ventana de tiempo corta) queda
+  solo como fallback para líneas cuyo id no se logre parsear.
 
 ---
 
