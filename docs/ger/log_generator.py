@@ -11,7 +11,8 @@ simular el comportamiento real de un sistema con dos endpoints:
 Además emite eventos de infraestructura sueltos (health checks, memoria, etc.)
 que NO pertenecen a una traza de request, para tener variedad.
 
-Salida: un archivo JSONL (1 log por línea) en /mnt/user-data/outputs/logs.jsonl
+Salida: un archivo JSONL (1 log por línea) en logs.jsonl, junto a este
+script (configurable con --output).
 Cada línea es un dict JSON con:
   timestamp, event_id, trace_id, span_id, caused_by, service,
   log_type, level, endpoint, message, metadata
@@ -23,6 +24,7 @@ reconstruir la cadena causal completa de una traza (útil para el grafo).
 """
 
 import json
+import os
 import random
 import uuid
 import argparse
@@ -376,7 +378,8 @@ def main():
     parser.add_argument("--get-traces", type=int, default=150, help="Cantidad de trazas GET /users")
     parser.add_argument("--payment-traces", type=int, default=150, help="Cantidad de trazas POST /payments")
     parser.add_argument("--infra-events", type=int, default=100, help="Cantidad de eventos de infra sueltos")
-    parser.add_argument("--output", type=str, default="/mnt/user-data/outputs/logs.jsonl")
+    parser.add_argument("--output", type=str,
+                        default=os.path.join(os.path.dirname(__file__), "logs.jsonl"))
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 

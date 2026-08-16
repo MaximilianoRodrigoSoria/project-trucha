@@ -19,9 +19,10 @@ Reutiliza los mismos escenarios de negocio que log_generator.py
 ingesta lo mismo cuando está bien vs. mal estructurado.
 
 Salida: texto plano línea por línea (NO es JSONL válido a propósito)
-en /mnt/user-data/outputs/messy_logs.log
+en messy_logs.log, junto a este script (configurable con --output).
 """
 
+import os
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -231,7 +232,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generador de logs desprolijos / inconsistentes")
     parser.add_argument("--traces", type=int, default=400, help="Cantidad de transacciones (traces)")
-    parser.add_argument("--output", type=str, default="/mnt/user-data/outputs/messy_logs.log")
+    parser.add_argument("--output", type=str,
+                        default=os.path.join(os.path.dirname(__file__), "messy_logs.log"))
     args = parser.parse_args()
 
     with open(args.output, "w", encoding="utf-8") as f:
