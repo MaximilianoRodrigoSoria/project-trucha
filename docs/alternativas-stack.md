@@ -30,7 +30,7 @@ Las seis alternativas buscan construir el mismo producto:
 ## Comparación rápida
 
 | # | Alternativa | Despliegue | Fortaleza principal | Complejidad inicial |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | Python + SQLite | Archivo local | Velocidad de desarrollo | Baja |
 | 2 | TypeScript + LanceDB | Directorio local | Ecosistema de agentes | Baja–media |
 | 3 | Rust + Tantivy + Qdrant Edge | Binario local | Rendimiento y portabilidad | Alta |

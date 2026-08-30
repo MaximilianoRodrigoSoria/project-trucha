@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -17,8 +18,17 @@ from trucha.ingest.scanner import (
     sha256_text,
     validate_repository_path,
 )
+from trucha.logs.trace import traces_from_events
 from trucha.retrieve import reciprocal_rank_fusion
-from trucha.store.models import ChunkModel, FileModel, IndexRunModel, RepositoryModel
+from trucha.store.models import (
+    ChunkModel,
+    FileModel,
+    IndexRunModel,
+    RepositoryModel,
+    TraceModel,
+)
+
+_STATUS_CODE_RE = re.compile(r"\bresponse (\d{3})\b")
 
 
 async def create_repository(
@@ -162,3 +172,149 @@ async def hybrid_search(
         }
         for chunk_id in ordered
     ]
+
+
+def _trace_status_code(trace: dict) -> int | None:
+    for event in trace["events"]:
+        match = _STATUS_CODE_RE.search(event["message"])
+        if match:
+            return int(match.group(1))
+    return None
+
+
+def _trace_to_rows(trace: dict, source_path: str, settings: Settings) -> TraceModel:
+    services = sorted({event["service"] for event in trace["events"] if event.get("service")})
+    levels = sorted({event["level"] for event in trace["events"] if event.get("level")})
+    return TraceModel(
+        trace_id=trace["trace_id"],
+        summary=trace["summary"],
+        embedding=embed_text(trace["summary"], settings.embedding_dimensions),
+        outcome=trace["outcome"],
+        source_quality=trace["source_quality"],
+        services=services,
+        levels=levels,
+        user_id=trace["user_id"],
+        payment_id=trace["payment_id"],
+        status_code=_trace_status_code(trace),
+        source_path=str(source_path),
+        event_count=len(trace["events"]),
+    )
+
+
+async def ingest_logs(
+    session: AsyncSession,
+    source_paths: list[str | Path],
+    settings: Settings,
+) -> dict[str, int]:
+    """Paso 3: parsea archivos de logs y guarda el resumen vectorizado de
+    cada traza en pgvector (idempotente por source_path + trace_id).
+
+    Devuelve stats: {'sources': n, 'parsed': n, 'traces': n, 'inserted': n,
+    'skipped': n, 'errors': n}.
+    """
+    stats: dict[str, int] = {
+        "sources": 0, "parsed": 0, "traces": 0, "inserted": 0,
+        "skipped": 0, "errors": 0,
+    }
+    for source in source_paths:
+        path = Path(source)
+        stats["sources"] += 1
+        try:
+            traces = traces_from_events(_parse_log_file(path))
+        except Exception:  # noqa: BLE001 - un archivo corrupto no debe abortar el resto
+            stats["errors"] += 1
+            continue
+        stats["parsed"] += len(traces)
+        existing = {
+            row.trace_id
+            for row in (
+                await session.scalars(
+                    select(TraceModel.trace_id).where(TraceModel.source_path == str(path))
+                )
+            ).all()
+        }
+        for trace in traces:
+            stats["traces"] += 1
+            if trace["trace_id"] in existing:
+                stats["skipped"] += 1
+                continue
+            session.add(_trace_to_rows(trace, str(path), settings))
+        await session.commit()
+    return stats
+
+
+def _parse_log_file(path: Path) -> list[dict]:
+    """Parsea un archivo de logs (JSONL prolijo o log desprolijo) a eventos
+    unificados, reutilizando la cascada de parsers de trucha.logs.parse."""
+    from trucha.logs.parse import parse_file
+
+    return parse_file(path)
+
+
+async def hybrid_log_search(
+    session: AsyncSession,
+    graph: object | None,
+    query: str,
+    settings: Settings,
+    limit: int = 10,
+    filter_quality: str | None = None,
+) -> list[dict[str, object]]:
+    """Paso 5: recuperación híbrida sobre trazas vectorizadas.
+
+    1. Búsqueda semántica en pgvector (top-k trazas por proximidad del
+       embedding del resumen narrativo a la pregunta).
+    2. Con esos trace_ids, entra al grafo causal y trae la cadena
+       completa (antes/después, en qué servicio).
+    3. Marca las trazas cuyo source_quality no es 'clean' para que la
+       capa de respuesta pueda avisar que son inferidas/reparadas.
+
+    `graph` puede ser `None` (sin Neo4j): devuelve las trazas del vector
+    store sin expandir la cadena causal.
+    """
+    candidate_limit = max(limit, settings.search_candidate_limit)
+    vector = embed_text(query, settings.embedding_dimensions)
+    distance = TraceModel.embedding.cosine_distance(vector)
+
+    statement = (
+        select(TraceModel, distance.label("distance"))
+        .order_by(distance)
+        .limit(candidate_limit)
+    )
+    if filter_quality:
+        statement = statement.where(TraceModel.source_quality == filter_quality)
+
+    rows = (await session.execute(statement)).all()
+    ordered = sorted(rows, key=lambda row: float(row[1]))[:limit]
+    trace_ids = [row[0].trace_id for row in ordered]
+
+    causal_chains: dict[str, list[dict]] = {}
+    if graph is not None and trace_ids:
+        for trace_id in trace_ids:
+            try:
+                causal_chains[trace_id] = await graph.causal_chain(trace_id)
+            except Exception:  # noqa: BLE001 - la búsqueda no debe romper por el grafo
+                causal_chains[trace_id] = []
+
+    results = []
+    for row in ordered:
+        trace, _ = row
+        trace_id = trace.trace_id
+        chain = causal_chains.get(trace_id, [])
+        low_confidence = trace.source_quality != "clean"
+        results.append({
+            "trace_id": trace_id,
+            "summary": trace.summary,
+            "outcome": trace.outcome,
+            "services": trace.services,
+            "levels": trace.levels,
+            "user_id": trace.user_id,
+            "payment_id": trace.payment_id,
+            "status_code": trace.status_code,
+            "source_quality": trace.source_quality,
+            "event_count": trace.event_count,
+            "source_path": trace.source_path,
+            "vector_score": 1.0 - float(row[1]),
+            "low_confidence": low_confidence,
+            "causal_chain": chain,
+        })
+    return results

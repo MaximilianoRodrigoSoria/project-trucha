@@ -66,7 +66,7 @@ curl -X POST http://localhost:8000/api/v1/decisions \
 ## Variables de entorno
 
 | Variable | Valor predeterminado | Uso |
-|---|---|---|
+| --- | --- | --- |
 | `POSTGRES_DB` | `trucha` | Base creada por PostgreSQL. |
 | `POSTGRES_USER` | `trucha` | Usuario de la base. |
 | `POSTGRES_PASSWORD` | `trucha-local` | Cambiar obligatoriamente fuera del entorno local. |

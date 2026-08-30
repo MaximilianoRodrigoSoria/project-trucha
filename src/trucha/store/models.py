@@ -81,3 +81,29 @@ class DecisionModel(Base):
     paths: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
     author: Mapped[str] = mapped_column(String(200), default="unknown")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TraceModel(Base):
+    """Resumen narrativo vectorizado de una transacción (Paso 3).
+
+    Se guarda el embedding del `summary` — lo que se recupera por
+    cercanía semántica ante una pregunta — junto a la metadata que
+    permite filtrar/ponderar por confiabilidad (source_quality).
+    """
+
+    __tablename__ = "traces"
+    __table_args__ = (UniqueConstraint("source_path", "trace_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trace_id: Mapped[str] = mapped_column(String(64), index=True)
+    summary: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list[float]] = mapped_column(VECTOR(DIMENSIONS))
+    outcome: Mapped[str] = mapped_column(String(50), default="")
+    source_quality: Mapped[str] = mapped_column(String(30), default="clean")
+    services: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    levels: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_path: Mapped[str] = mapped_column(Text)
+    event_count: Mapped[int] = mapped_column(Integer, default=0)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

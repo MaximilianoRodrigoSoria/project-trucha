@@ -118,7 +118,7 @@ Usá la herramienta trucha_hello y saludá a Joel desde OpenCode.
 ## 5. Herramientas MCP disponibles
 
 | Herramienta | Uso |
-|---|---|
+| --- | --- |
 | `trucha_hello` | Comprueba la conexión y devuelve un saludo estructurado. |
 | `trucha_project_info` | Devuelve versión, interfaces y capacidades actuales. |
 
@@ -141,6 +141,6 @@ comportamiento normal de un servidor MCP `stdio`.
 
 ## Fuentes oficiales
 
-- Codex MCP: https://developers.openai.com/codex/mcp
-- Claude Code MCP: https://code.claude.com/docs/en/mcp
-- OpenCode MCP: https://dev.opencode.ai/docs/mcp-servers/
+- Codex MCP: <https://developers.openai.com/codex/mcp>
+- Claude Code MCP: <https://code.claude.com/docs/en/mcp>
+- OpenCode MCP: <https://dev.opencode.ai/docs/mcp-servers/>

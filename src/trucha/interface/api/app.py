@@ -8,17 +8,29 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from trucha.answer import answer_logs
 from trucha.config import get_settings
 from trucha.interface.api.schemas import (
+    AnswerRequest,
+    AnswerResult,
     DecisionCreate,
     DecisionRead,
     IndexRunRead,
+    LogSearchRequest,
+    LogsIngestRequest,
     RepositoryCreate,
     RepositoryRead,
     SearchRequest,
     SearchResult,
+    TraceResult,
 )
-from trucha.services import create_repository, hybrid_search, index_repository
+from trucha.services import (
+    create_repository,
+    hybrid_log_search,
+    hybrid_search,
+    index_repository,
+    ingest_logs,
+)
 from trucha.store.database import close_engine, get_session
 from trucha.store.models import DecisionModel, IndexRunModel
 
@@ -89,6 +101,54 @@ def create_app() -> FastAPI:
         if repository_id:
             statement = statement.where(DecisionModel.repository_id == repository_id)
         return list((await session.scalars(statement)).all())
+
+    @api.post("/api/v1/logs/ingest", status_code=status.HTTP_201_CREATED)
+    async def ingest_logs_endpoint(
+        payload: LogsIngestRequest, session: AsyncSession = Depends(get_session)
+    ):
+        from trucha.graph.client import open_graph
+
+        stats = await ingest_logs(session, payload.paths, settings)
+        if payload.sync_graph:
+            from pathlib import Path
+
+            from trucha.logs.trace import load_traces
+
+            graph = await open_graph(settings)
+            try:
+                for path in payload.paths:
+                    await graph.sync_traces(load_traces(Path(path)))
+            finally:
+                await graph.close()
+        return stats
+
+    @api.post("/api/v1/logs/search", response_model=list[TraceResult])
+    async def search_logs_endpoint(
+        payload: LogSearchRequest, session: AsyncSession = Depends(get_session)
+    ):
+        from trucha.graph.client import open_graph
+
+        graph = await open_graph(settings) if payload.sync_graph else None
+        try:
+            return await hybrid_log_search(
+                session, graph, payload.query, settings, limit=payload.limit
+            )
+        finally:
+            if graph is not None:
+                await graph.close()
+
+    @api.post("/api/v1/logs/answer", response_model=AnswerResult)
+    async def answer_logs_endpoint(
+        payload: AnswerRequest, session: AsyncSession = Depends(get_session)
+    ):
+        from trucha.graph.client import open_graph
+
+        graph = await open_graph(settings) if payload.sync_graph else None
+        try:
+            return await answer_logs(session, graph, payload.question, settings, limit=payload.limit)
+        finally:
+            if graph is not None:
+                await graph.close()
 
     return api
 

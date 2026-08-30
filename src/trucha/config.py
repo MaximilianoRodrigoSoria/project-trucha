@@ -18,12 +18,19 @@ class Settings(BaseSettings):
     app_name: str = "project-trucha"
     environment: str = "development"
     database_url: str = "postgresql+asyncpg://trucha:trucha@localhost:5432/trucha"
+    neo4j_uri: str = "bolt://localhost:7687"
+    neo4j_user: str = "neo4j"
+    neo4j_password: str = "trucha-graph-local"
     allowed_roots: Annotated[list[Path], NoDecode] = Field(default_factory=lambda: [Path.cwd()])
     embedding_dimensions: int = 64
     chunk_size_lines: int = 80
     chunk_overlap_lines: int = 10
     max_file_bytes: int = 1_000_000
     search_candidate_limit: int = 40
+
+    llm_provider: str = ""  # "" | "openai" | "anthropic"
+    llm_api_key: str = ""
+    llm_model: str = ""
 
     @field_validator("allowed_roots", mode="before")
     @classmethod

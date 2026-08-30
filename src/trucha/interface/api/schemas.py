@@ -59,3 +59,55 @@ class DecisionRead(DecisionCreate):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     created_at: datetime
+
+
+class LogsIngestRequest(BaseModel):
+    paths: list[str] = Field(min_length=1, max_length=50)
+    sync_graph: bool = False
+
+
+class CausalStep(BaseModel):
+    cause_id: str | None = None
+    event_id: str | None = None
+    service: str | None = None
+    level: str | None = None
+    message: str | None = None
+    timestamp: str | None = None
+    confidence: float | None = None
+    source_quality: str | None = None
+
+
+class LogSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=1000)
+    limit: int = Field(default=10, ge=1, le=50)
+    sync_graph: bool = False
+
+
+class TraceResult(BaseModel):
+    trace_id: str
+    summary: str
+    outcome: str
+    services: list[str]
+    levels: list[str]
+    user_id: int | None = None
+    payment_id: str | None = None
+    status_code: int | None = None
+    source_quality: str
+    event_count: int
+    source_path: str
+    vector_score: float
+    low_confidence: bool
+    causal_chain: list[CausalStep] = Field(default_factory=list)
+
+
+class AnswerRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    limit: int = Field(default=5, ge=1, le=20)
+    sync_graph: bool = False
+
+
+class AnswerResult(BaseModel):
+    question: str
+    answer: str
+    provider: str
+    results: list[TraceResult]

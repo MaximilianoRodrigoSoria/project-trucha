@@ -14,14 +14,37 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  graph:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-trucha-graph-local}
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1g
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-trucha-graph-local} 'RETURN 1'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - graph-data:/data
+    restart: unless-stopped
+
   api:
     build: .
     environment:
       TRUCHA_ENVIRONMENT: ${TRUCHA_ENVIRONMENT:-development}
       TRUCHA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-trucha}:${POSTGRES_PASSWORD:-trucha-local}@db:5432/${POSTGRES_DB:-trucha}
       TRUCHA_ALLOWED_ROOTS: ${TRUCHA_ALLOWED_ROOTS:-/workspace}
+      TRUCHA_NEO4J_URI: bolt://graph:7687
+      TRUCHA_NEO4J_USER: neo4j
+      TRUCHA_NEO4J_PASSWORD: ${NEO4J_PASSWORD:-trucha-graph-local}
     depends_on:
       db:
+        condition: service_healthy
+      graph:
         condition: service_healthy
     ports:
       - "${TRUCHA_PORT:-8000}:8000"
@@ -31,3 +54,4 @@ services:
 
 volumes:
   postgres-data:
+  graph-data:

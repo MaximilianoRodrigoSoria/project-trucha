@@ -59,7 +59,7 @@ Cuando un agente de desarrollo trabaja sobre un codebase real, necesita responde
 ### Principios de diseño
 
 | Principio | Qué significa |
-|---|---|
+| --- | --- |
 | **Local-first** | Funciona sobre el codebase local, sin servicios externos obligatorios ni datos saliendo de la máquina. |
 | **Baja fricción** | `pip install` y listo. Nada de levantar contenedores ni administrar un servidor para empezar. |
 | **Portable** | El índice vive idealmente en un único archivo versionable/copiable, no en un servicio con estado propio. |
@@ -92,7 +92,7 @@ El nombre no es casual. La trucha es un animal que dice bastante sobre cómo que
 El primer objetivo es un núcleo mínimo y útil. Sujeto a cambios según la decisión de arquitectura:
 
 | Capacidad | Descripción |
-|---|---|
+| --- | --- |
 | **Indexado del repo** | Recorrer un codebase, trocearlo (por archivo / símbolo / bloque) y persistir su contenido. |
 | **Búsqueda léxica** | Recuperación full-text por palabra clave / identificador, con ranking. |
 | **Búsqueda semántica** | Recuperación por similitud sobre embeddings del contenido. |
@@ -172,7 +172,7 @@ Necesitamos un motor de almacenamiento que sostenga tres cosas a la vez —búsq
 ### Opciones bajo evaluación
 
 | Opción | Fricción | Léxica | Vectorial | Portabilidad | Escala | Notas |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | **SQLite + FTS5** | Muy baja (embebido) | ✅ BM25 nativo | ❌ (sin extensión) | ✅ archivo único | Media | Cero servidor, cero dependencias externas. Sin vectorial por sí solo. |
 | **SQLite + FTS5 + sqlite-vec** | Baja (embebido) | ✅ BM25 | ✅ KNN por extensión | ✅ archivo único | Media | Híbrido léxico + vectorial en un solo archivo. Extensión joven pero suficiente para búsqueda por similitud. |
 | **LanceDB** | Baja (embebido) | ⚠️ limitada | ✅ columnar, rápida | ✅ directorio de datos | Alta | Vector store embebido y veloz; léxico menos maduro que FTS5. |
@@ -276,7 +276,7 @@ En esta etapa, el aporte más valioso es **participar en la decisión de arquite
 ## Roadmap
 
 | Fase | Objetivo |
-|---|---|
+| --- | --- |
 | **0 — Decisión** *(actual)* | Cerrar el backend de memoria (ADR-0001) y congelar la interfaz de la capa `store`. |
 | **1 — Núcleo** | Indexado + búsqueda léxica sobre el backend elegido. Reindex incremental. |
 | **2 — Semántica** | Embeddings + búsqueda vectorial + fusión híbrida. |

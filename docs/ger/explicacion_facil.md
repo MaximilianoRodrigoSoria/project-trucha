@@ -22,6 +22,7 @@ tiene siempre los mismos campos, en el mismo formato, y además dice
 **causalidad**: `caused_by`).
 
 Simula dos casos reales:
+
 - Alguien pide ver los datos de un usuario (`GET /api/users/123`).
 - Alguien hace un pago (`POST /api/payments`).
 
@@ -39,6 +40,7 @@ otro, algunas ni le ponen fecha, otras escriben mal la palabra "error"
 ("Err", "ERROR", "errr").
 
 Genera la misma clase de eventos (usuarios, pagos) pero mezclando:
+
 - **5 formatos distintos por línea** (como si mezclaras notas en
   papel, mensajes de WhatsApp y capturas de pantalla, todo junto).
 - **Fechas escritas de formas distintas** (algunas sin año, algunas
