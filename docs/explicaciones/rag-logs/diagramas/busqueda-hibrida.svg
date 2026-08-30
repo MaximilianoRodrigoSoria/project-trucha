@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="440" viewBox="0 0 860 440" font-family="system-ui,Segoe UI,sans-serif">
+  <defs>
+    <marker id="a1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#22d3a8"/></marker>
+    <marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#f5b84b"/></marker>
+  </defs>
+  <rect width="860" height="440" fill="#0f1220"/>
+  <text x="430" y="32" fill="#e8eaf6" font-size="18" font-weight="bold" text-anchor="middle">Paso 5 · Búsqueda híbrida (hybrid_log_search)</text>
+
+  <!-- pregunta -->
+  <rect x="350" y="60" width="160" height="42" rx="8" fill="#7c5cff"/>
+  <text x="430" y="86" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Pregunta</text>
+
+  <!-- rama vector (izquierda) -->
+  <g>
+    <rect x="60" y="120" width="250" height="120" rx="10" fill="#1a1f35" stroke="#22d3a8"/>
+    <text x="185" y="144" fill="#22d3a8" font-size="13" font-weight="bold" text-anchor="middle">RAM 1 · Semántica (pgvector)</text>
+    <text x="185" y="168" fill="#e8eaf6" font-size="12" text-anchor="middle">embed_text(pregunta, 64d)</text>
+    <text x="185" y="188" fill="#e8eaf6" font-size="12" text-anchor="middle">coseno sobre traces.embedding</text>
+    <text x="185" y="208" fill="#9aa3c7" font-size="12" text-anchor="middle">→ top-k trazas + vector_score</text>
+  </g>
+
+  <!-- rama causal (derecha) -->
+  <g>
+    <rect x="550" y="120" width="250" height="120" rx="10" fill="#1a1f35" stroke="#f5b84b"/>
+    <text x="675" y="144" fill="#f5b84b" font-size="13" font-weight="bold" text-anchor="middle">RAM 2 · Causal (Neo4j)</text>
+    <text x="675" y="168" fill="#e8eaf6" font-size="12" text-anchor="middle">con esos trace_ids</text>
+    <text x="675" y="188" fill="#e8eaf6" font-size="12" text-anchor="middle">causal_chain() → CAUSED_BY</text>
+    <text x="675" y="208" fill="#9aa3c7" font-size="12" text-anchor="middle">con confianza 1.0 / 0.6</text>
+  </g>
+
+  <line x1="430" y1="102" x2="185" y2="120" stroke="#22d3a8" stroke-width="3" marker-end="url(#a1)"/>
+  <line x1="430" y1="102" x2="675" y2="120" stroke="#f5b84b" stroke-width="3" marker-end="url(#a2)"/>
+
+  <!-- fusion -->
+  <rect x="300" y="270" width="260" height="50" rx="10" fill="#222842" stroke="#2c3357"/>
+  <text x="430" y="292" fill="#e8eaf6" font-size="13" font-weight="bold" text-anchor="middle">Fusión → resultado</text>
+  <text x="430" y="310" fill="#9aa3c7" font-size="11.5" text-anchor="middle">traza + vector_score + cadena causal</text>
+  <line x1="185" y1="240" x2="380" y2="270" stroke="#22d3a8" stroke-width="3" marker-end="url(#a1)"/>
+  <line x1="675" y1="240" x2="480" y2="270" stroke="#f5b84b" stroke-width="3" marker-end="url(#a2)"/>
+
+  <!-- marca de confianza -->
+  <g>
+    <rect x="308" y="338" width="244" height="52" rx="9" fill="#2a1719" stroke="#ff6b6b"/>
+    <text x="430" y="360" fill="#ff6b6b" font-size="12.5" font-weight="bold" text-anchor="middle">Marca confianza</text>
+    <text x="430" y="379" fill="#e8eaf6" font-size="12" text-anchor="middle">low_confidence = source_quality != "clean"</text>
+  </g>
+  <line x1="430" y1="320" x2="430" y2="338" stroke="#9aa3c7" stroke-width="2"/>
+
+  <!-- degradacion -->
+  <text x="430" y="418" fill="#6b7299" font-size="12" text-anchor="middle">Degradación segura: si el grafo falla → se devuelve la traza con cadena vacía (no rompe)</text>
+</svg>

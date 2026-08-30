@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El RAG de logs · Explicación interactiva</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#1a1f35; --panel2:#222842; --ink:#e8eaf6;
+    --muted:#9aa3c7; --accent:#7c5cff; --accent2:#22d3a8; --warn:#f5b84b;
+    --bad:#ff6b6b; --good:#22d3a8; --line:#2c3357;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;padding-bottom:4rem}
+  .wrap{max-width:920px;margin:0 auto;padding:0 1.2rem}
+  header{padding:3rem 0 1.5rem;border-bottom:1px solid var(--line)}
+  h1{font-size:2rem;margin:0 0 .4rem}
+  .tagline{color:var(--muted)}
+  .evader{background:linear-gradient(135deg,var(--accent),#3b2fa0);border-radius:14px;
+    padding:1.1rem 1.3rem;margin:1.5rem 0;font-size:1.05rem}
+  .tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:1.5rem 0}
+  .tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);
+    padding:.55rem 1rem;border-radius:999px;cursor:pointer;font-size:.95rem;transition:.15s}
+  .tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .level{display:none}
+  .level.active{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2{font-size:1.3rem;margin:2rem 0 .6rem;color:var(--accent2)}
+  h3{font-size:1.05rem;margin:1.5rem 0 .4rem}
+  .chunk{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:1rem 1.2rem;margin:1rem 0}
+  .meta{color:var(--muted)}
+  code{background:#0b0e1d;padding:.15rem .4rem;border-radius:6px;font-size:.92em}
+  pre{background:#0b0e1d;border:1px solid var(--line);border-radius:10px;padding:1rem;
+    overflow:auto;font-size:.9rem}
+  .contrast{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.2rem 0}
+  @media(max-width:640px){.contrast{grid-template-columns:1fr}}
+  .good,.bad{border-radius:10px;padding:.9rem 1.1rem;border:1px solid}
+  .good{background:#0d291f;border-color:var(--good)}
+  .bad{background:#2a1719;border-color:var(--bad)}
+  .aha{background:#2a2410;border:1px solid var(--warn);border-radius:10px;padding:.9rem 1.1rem;margin:1.2rem 0}
+  .recap{background:var(--panel2);border-left:4px solid var(--accent2);border-radius:0 10px 10px 0;
+    padding:.85rem 1.1rem;margin:1.2rem 0}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.6rem 1rem;margin:.6rem 0}
+  summary{cursor:pointer;font-weight:600}
+  /* Pipeline revelado */
+  .steps{display:flex;flex-direction:column;gap:.7rem;margin:1.2rem 0}
+  .step{display:flex;align-items:center;gap:.8rem;opacity:.28;transition:.35s;flex-wrap:wrap}
+  .step.on{opacity:1}
+  .step .num{background:var(--panel2);border:1px solid var(--accent);color:var(--accent);
+    width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none}
+  .step.on .num{background:var(--accent);color:#fff}
+  .step .body{flex:1;min-width:200px}
+  .controls{display:flex;gap:.6rem;align-items:center;margin-top:.8rem}
+  .btn{background:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-weight:600}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn.ghost{background:var(--panel);color:var(--muted);border:1px solid var(--line)}
+  .bar{height:6px;background:var(--panel2);border-radius:999px;overflow:hidden;flex:1}
+  .bar span{display:block;height:100%;width:0;background:var(--accent2);transition:.35s}
+  /* Quiz */
+  .quiz{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:1.1rem;margin:1.1rem 0}
+  .quiz .q{font-weight:600;margin-bottom:.7rem}
+  .quiz .opt{display:block;width:100%;text-align:left;background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;margin:.35rem 0;cursor:pointer}
+  .quiz .opt:hover{border-color:var(--accent)}
+  .quiz .opt.correct{background:#0d291f;border-color:var(--good)}
+  .quiz .opt.wrong{background:#2a1719;border-color:var(--bad)}
+  .quiz .feedback{display:none;margin-top:.7rem;padding:.7rem .9rem;border-radius:8px;font-size:.95rem}
+  .quiz .feedback.show{display:block}
+  .quiz .feedback.ok{background:#0d291f;border:1px solid var(--good)}
+  .quiz .feedback.no{background:#2a1719;border:1px solid var(--bad)}
+  .score{color:var(--muted);font-size:.9rem;margin-top:.5rem}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    padding:.2rem .6rem;border-radius:999px;font-size:.8rem;margin-right:.4rem}
+  footer{margin-top:3rem;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:1rem}
+  a{color:var(--accent2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>El RAG de logs de project-trucha 🕵️</h1>
+  <div class="tagline">Explicación interactiva para que de verdad se entienda — elige tu nivel para empezar.</div>
+</header>
+
+<div class="evader">
+  <strong>El evador (20 segundos):</strong> project-trucha es un <strong>traductor universal de
+  registros</strong>. Le tiras cualquier log (prolijo o garabateado), lo <strong>lee, le arma la
+  historia (traza), lo guarda en dos archivos</strong> (uno por "significado", otro por "causa y
+  efecto") y después <strong>responde preguntas</strong> buscando en ambos — todo sin internet ni claves.
+</div>
+
+<nav class="tabs">
+  <button class="active" data-lvl="evador">El evador · 20 s</button>
+  <button data-lvl="turista">El turista · 2 min</button>
+  <button data-lvl="ingeniero">El ingeniero · a fondo</button>
+  <button data-lvl="sabio">El sabio · conexiones</button>
+</nav>
+
+<!-- ===================== EVADOR ===================== -->
+<section id="evador" class="level active">
+  <h2>En menos de 3 frases</h2>
+  <div class="chunk">
+    <p>El sistema lee <strong>cualquier log</strong> por desprolijo que sea, arma un
+    <strong>expediente cronológico resumido</strong> (la traza), lo guarda en <strong>dos archivos</strong>
+    (uno por significado parecido y otro por causa-efecto), y al preguntarle <strong>busca en ambos</strong>
+    y responde citando sus pruebas.</p>
+    <p>La clave: <strong>el mismo incidente bien o mal escrito produce el mismo significado</strong>, y el
+    sistema <strong>marca la confianza</strong> de cada dato.</p>
+  </div>
+  <h3>Las 3 fases (para recordar el flujo)</h3>
+  <div class="chunk">
+    <span class="pill">FASE 1 · Ingesta (pasos 0–2)</span> parsear → traza → resumen
+    <br><span class="pill">FASE 2 · Almacén dual (pasos 3–4)</span> vector + grafo causal
+    <br><span class="pill">FASE 3 · Respuesta (pasos 5–6)</span> búsqueda híbrida → respuesta LLM
+  </div>
+</section>
+
+<!-- ===================== TURISTA ===================== -->
+<section id="turista" class="level">
+  <h2>La metáfora ancla: el detective forense</h2>
+  <div class="chunk">
+    <p>Imaginá una <strong>mesada de un archivo policial</strong>. Hay papeles prolijos (declaraciones
+    legibles, con fecha, cada uno señalando "esto pasó porque esto") y papeles <strong>garabateados</strong>
+    (anotaciones al margen, sin año, con abreviaturas <code>[WARN] api-gw :: payment_failed (trc=reqId_88)</code>).</p>
+    <p>El <strong>detective forense</strong> (el sistema):</p>
+    <ol>
+      <li><strong>Lee cada papel</strong> aunque esté garabateado → transcribe a una ficha normalizada.</li>
+      <li><strong>Junta las fichas del mismo incidente</strong> en un expediente cronológico (la <strong>traza</strong>)
+        y escribe un <strong>resumen narrativo</strong> ("Pago rechazado del usuario u_7f por $99").</li>
+      <li><strong>Guarda el resumen en dos archivos</strong>: uno por "parecido de significado" (vector),
+        otro por "causa y efecto" (grafo).</li>
+      <li>Al preguntarle, <strong>busca en ambos</strong> y responde con las <strong>pruebas citadas</strong>.</li>
+    </ol>
+  </div>
+
+  <div class="contrast">
+    <div class="good">
+      <strong>Prolijo (clean)</strong> — declaración legible<br>
+      <code>{"event_id":"e1","caused_by":null,"service":"api-gw","level":"WARN","message":"payment_failed","user_id":"u_7f"}</code>
+      <p class="meta">Causalidad explícita → confianza <strong>1.0</strong></p>
+    </div>
+    <div class="bad">
+      <strong>Garabateado (repaired)</strong> — anotación al margen<br>
+      <code>[WARN] api-gw :: payment_failed (user u_7f, trc=reqId_88)</code>
+      <p class="meta">Causalidad inferida → confianza <strong>0.6</strong></p>
+    </div>
+  </div>
+  <p class="meta" style="text-align:center">El mismo incidente, el mismo significado — distinta confianza marcada.</p>
+
+  <h3>El viaje de los datos de punta a punta</h3>
+  <div class="step-graphic chunk">
+    <div style="text-align:center;color:var(--muted);font-size:.9rem">
+      🧾 log → <strong>INGESTA</strong> (ficha + expediente + resumen)
+      <br>⬇
+      <br>💾 <strong>2 archivos</strong>: vector (se parece) &nbsp;+&nbsp; grafo (causa)
+      <br>⬇
+      <br>💬 <strong>RESPUESTA</strong>: busco en ambos → respondo con pruebas
+    </div>
+  </div>
+
+  <div class="recap"><strong>Recapitulemos:</strong> acordate de las <strong>3 fases</strong> y de que la
+  <strong>"traza"</strong> (el expediente resumido) es lo que se guarda y se busca. No avances sin eso.</div>
+</section>
+
+<!-- ===================== INGENIERO ===================== -->
+<section id="ingeniero" class="level">
+
+  <h2>Pipeline revelado paso a paso</h2>
+  <p class="meta">Pulsá "Siguiente" y mirá cómo se enciende cada paso — contando con la memoria, paso a paso.</p>
+  <div class="steps">
+    <div class="step on"><div class="num">0</div><div class="body"><strong>Parsear y reparar</strong>
+      <span class="meta">— línea cruda → schema unificado + <code>source_quality</code> · <code>parse.py</code></span></div></div>
+    <div class="step"><div class="num">1</div><div class="body"><strong>Armar la traza</strong>
+      <span class="meta">— agrupar por <code>trace_id</code>, ordenar, causalidad · <code>trace.py</code></span></div></div>
+    <div class="step"><div class="num">2</div><div class="body"><strong>Resumen narrativo</strong>
+      <span class="meta">— "Traza x: Pago rechazado…" · se vectoriza · <code>trace.py</code></span></div></div>
+    <div class="step"><div class="num">3</div><div class="body"><strong>Embedding + vector store</strong>
+      <span class="meta">— <code>embed_text()</code> 64d → tabla <code>traces</code> (HNSW) · <code>embed/local.py</code> + <code>store/</code></span></div></div>
+    <div class="step"><div class="num">4</div><div class="body"><strong>Grafo causal</strong>
+      <span class="meta">— nodos + <code>CAUSED_BY</code> en Neo4j · <code>graph/</code></span></div></div>
+    <div class="step"><div class="num">5</div><div class="body"><strong>Búsqueda híbrida</strong>
+      <span class="meta">— semántica (pgvector) + cadena causal (grafo) + marca confianza · <code>services.py</code></span></div></div>
+    <div class="step"><div class="num">6</div><div class="body"><strong>Capa de respuesta</strong>
+      <span class="meta">— prompt con evidencia + LLM (o fallback local) · <code>answer.py</code></span></div></div>
+  </div>
+  <div class="controls">
+    <button class="btn" id="prev" disabled>← Atrás</button>
+    <button class="btn ghost" id="next">Siguiente →</button>
+    <div class="bar"><span id="prog"></span></div>
+  </div>
+
+  <h3>Fase 1 · Ingesta</h3>
+  <div class="chunk">
+    <h3>Paso 0 · Cascada de parsers — <code>parse.py</code></h3>
+    <pre>json.loads → SLOPPY_RE → BARE_RE → STACK_RE → SYSLOG_RE → _from_logfmt()
+(limpio)   (comilla simple)  ([LEVEL] svc :: msg)  (stack pegado)  (syslog)   (logfmt)
+Si nada matchea → la línea se descarta (None).</pre>
+    <p><code>parse_timestamp()</code> normaliza a ISO 8601 UTC; si falta año/hora completa con la fecha de
+    ingesta y marca <code>timestamp_inferred=true</code>. <code>parse_file()</code> degraada a
+    <code>"low_confidence"</code> los reparados sin <code>trace_id</code>.</p>
+  </div>
+
+  <div class="chunk">
+    <h3>Pasos 1–2 · Traza + resumen — <code>trace.py</code></h3>
+    <ul>
+      <li><code>traces_from_events()</code> agrupa por <code>trace_id</code> y ordena por timestamp.</li>
+      <li><code>_assign_fallback_traces()</code>: sin trace_id → se agrupa por usuario+servicio en 2 s → <code>"low_confidence"</code>.</li>
+      <li><code>_assign_synthetic_event_ids()</code>: <code>event_id</code> determinista (blake2b) → <code>MERGE</code> idempotente.</li>
+      <li><code>_resolved_caused_by()</code>: causalidad explícita <strong>1.0</strong> o inferida <strong>0.6</strong>; toda-inferida → <code>"repaired"</code>.</li>
+      <li><code>_worst_quality()</code>: gana el peor (<code>clean</code>&gt;<code>repaired</code>&gt;<code>low_confidence</code>).</li>
+      <li><code>build_summary()</code>: el <strong>artefacto que se vectoriza</strong>.</li>
+    </ul>
+  </div>
+
+  <h3>Fase 2 · Almacenamiento dual</h3>
+  <div class="chunk">
+    <h3>Paso 3 · Embedding local determinista — <code>embed/local.py</code></h3>
+    <pre>for token in tokens:
+    digest = blake2b(token.encode(), digest_size=16).digest()
+    index  = int.from_bytes(digest[:8], "big") % 64   # bucket
+    sign   = 1.0 if digest[8] & 1 else -1.0           # signo
+    vector[index] += sign</pre>
+    <div class="aha"><strong>¡Ahá! (emoción/contraste):</strong> <strong>nada sale de tu máquina</strong> — es el
+    sello <strong>local-first</strong>. 64 dimensiones, sin dependencias, determinista → tests predecibles.</div>
+    <p>Se persiste en <code>TraceModel</code> (tabla <code>traces</code>, único por
+    <code>(source_path, trace_id)</code> → idempotente) con índice <strong>HNSW</strong> de coseno (migración <code>0002_traces.py</code>).</p>
+  </div>
+
+  <div class="chunk">
+    <h3>Paso 4 · Grafo causal — <code>graph/</code></h3>
+    <p>Funciones <strong>puras</strong> en <code>build.py</code> que devuelven Cypher (testeables sin Neo4j):</p>
+    <ul>
+      <li>Nodos: <strong>Trace</strong>, <strong>LogEvent</strong>, y por PUT <strong>Service/User/PaymentID</strong>.</li>
+      <li>Relaciones: <strong>CAUSED_BY</strong> (confidence 1.0/0.6), <strong>PART_OF</strong>, <strong>EMITTED_BY</strong>, <strong>INVOLVES</strong>.</li>
+      <li><code>GraphClient.causal_chain()</code> recupera la cadena en orden temporal con la confianza.</li>
+    </ul>
+  </div>
+
+  <h3>Fase 3 · Respuesta</h3>
+  <div class="chunk">
+    <h3>Paso 5 · Búsqueda híbrida — <code>services.py</code></h3>
+    <ol>
+      <li><strong>Semántica:</strong> embedding de la pregunta → coseno en <code>traces.embedding</code> (top-k).</li>
+      <li><strong>Causal:</strong> con esos ids → <code>causal_chain()</code> del grafo (si hay).</li>
+      <li><strong>Marca:</strong> <code>low_confidence = source_quality != "clean"</code>, <code>vector_score</code>, cadena.</li>
+    </ol>
+    <div class="recap"><strong>Degradación segura:</strong> si el grafo falla, sigue devolviendo trazas con cadena
+    vacía — la búsqueda no se rompe por el grafo (services.py:254).</div>
+  </div>
+
+  <div class="chunk">
+    <h3>Paso 6 · Capa de respuesta — <code>answer.py</code> + <code>llm/</code></h3>
+    <p><code>answer_logs()</code>: recupera evidencia → arma prompt con <code>_build_prompt()</code>/<code>_format_evidence()</code>
+    (marcar <code>[INFERIDA]/[REPARADA]</code> y citar traza) → <code>get_provider()</code> →
+    <code>""→NoneProvider</code>, <code>openai</code>, <code>anthropic</code>.</p>
+    <p><strong>NoneProvider</strong> = fallback determinista sin API key (local-first). Resultado:
+    <code>{question, answer, provider, results}</code>.</p>
+  </div>
+
+  <h3>Ejemplo trabajado — un log garabateado, de punta a punta</h3>
+  <div class="chunk">
+    <p>Línea: <code>[WARN] api-gw :: payment_failed (user u_7f, trc=reqId_88)</code></p>
+    <table>
+      <tr><th>Paso</th><th>Qué pasa</th></tr>
+      <tr><td>0</td><td><code>BARE_RE</code>, level→WARN, user→u_7f, trace→reqId_88 · <code>repaired</code></td></tr>
+      <tr><td>1</td><td>Agrupa reqId_88; causalidad inferida → 0.6 · traza <code>repaired</code></td></tr>
+      <tr><td>2</td><td>Resumen: "Pago rechazado del usuario u_7f…"</td></tr>
+      <tr><td>3</td><td><code>embed_text(resumen, 64)</code> → fila en <code>traces</code> + HNSW</td></tr>
+      <tr><td>4</td><td>Nodos + <code>CAUSED_BY</code> confidence 0.6</td></tr>
+      <tr><td>5</td><td>"¿por qué falló el pago de u_7f?" → top-k + cadena · <code>low_confidence=true</code></td></tr>
+      <tr><td>6</td><td>LLM marca <code>[REPARADA]</code> y cita la traza · <code>provider</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== SABIO ===================== -->
+<section id="sabio" class="level">
+  <h2>El porqué del diseño</h2>
+  <div class="chunk">
+    <ul>
+      <li><strong>Por qué dos magacenes:</strong> el vector recuerda "parecido", no "causa". El operador que
+        diagnostica quiere la cadena causal; cada magacén optimiza un tipo de pregunta (híbrido).</li>
+      <li><strong>Local-first / sin API keys:</strong> probá y enseñá siempre, sin credenciales; determinismo
+        para tests predecibles.</li>
+      <li><strong>El hilo de confianza (<code>source_quality</code>):</strong> el sistema es honesto: etiqueta
+        <code>clean/repaired/low_confidence</code> y se lo comunica al LLM. Observabilidad de la confianza.</li>
+      <li><strong>Trade-off:</strong> embeddings locales de 64d pierden matiz semántico, pero son reproducibles,
+        baratos y sin red — elección deliberada para un RAG didáctico.</li>
+      <li><strong>Errores comunes:</strong> confundir traza con log; creer que el grafo es obligatorio (degradación
+        segura: funciona solo con vector); olvidar que <code>source_quality</code> viaja de punta a punta.</li>
+      <li><strong>Mapeo general:</strong> es un <strong>RAG</strong> estándar (documento → chunks → embeddings →
+        búsqueda → LLM) con un <strong>segundo recuperador causal</strong> (Neo4j) que enriquece la evidencia.</li>
+    </ul>
+  </div>
+
+  <div class="recap"><strong>Recencia (cierre):</strong> volvemos al mensaje del inicio — <em>un traductor
+  universal que convierte cualquier log en historia, la guarda de dos formas y responde citando pruebas,
+  siendo honesto sobre la confianza del dato.</em> Eso es el RAG de logs.</div>
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section id="quiz">
+  <h2>Quiz de recuperación activa</h2>
+  <p class="meta">Respondé y mirá el feedback — memorizás probándote, no releyendo.</p>
+
+  <div class="quiz" data-q="0">
+    <div class="q">P1. ¿Qué es una "traza" y por qué es lo que se guarda y se busca?</div>
+    <button class="opt">Una sola línea de log cruda</button>
+    <button class="opt" data-correct>El expediente cronológico resumido de un mismo incidente (trace_id) con su resumen narrativo</button>
+    <button class="opt">El embedding numérico de 64 dimensiones</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="quiz" data-q="1">
+    <div class="q">P2. ¿Quién responde "¿qué se parece a mi pregunta?" y quién "¿qué causó qué?"?</div>
+    <button class="opt" data-correct>pgvector el parecido; Neo4j (CAUSED_BY) la causa-efecto</button>
+    <button class="opt">pgvector la causa; Neo4j el parecido</button>
+    <button class="opt">Solo pgvector responde todo</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="quiz" data-q="2">
+    <div class="q">P3. Una traza tiene un evento reparado y el resto limpios. ¿Qué calidad gana? ¿Y si toda la causalidad es inferida?</div>
+    <button class="opt" data-correct>Gana el peor (repaired) y degrada la traza entera; si toda es inferida baja a "repaired"</button>
+    <button class="opt">Gana el mejor (clean) y salva la traza</button>
+    <button class="opt">No importa, cada evento conserva su calidad</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="quiz" data-q="3">
+    <div class="q">P4. ¿Qué hace NoneProvider y por qué existe?</div>
+    <button class="opt">Es un modelo de IA más potente por defecto</button>
+    <button class="opt" data-correct>Es el fallback determinista que responde sin API key (local-first)</button>
+    <button class="opt">Es el índice HNSW de la tabla de trazas</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="quiz" data-q="4">
+    <div class="q">P5. Si Neo4j se cae, ¿se rompe la búsqueda? ¿Por qué?</div>
+    <button class="opt">Sí, se rompe porque el grafo es obligatorio</button>
+    <button class="opt">No sé, depende de la suerte</button>
+    <button class="opt" data-correct>No: hay degradación segura, devuelve las trazas con cadena causal vacía</button>
+    <div class="feedback"></div>
+  </div>
+
+  <p class="score">Aciertos: <span id="score">0</span> / 5</p>
+</section>
+
+<footer>
+  <p>Generado por la skill <strong>neuroscience-explainer</strong> y validado contra el código real vía
+  <code>codebase-memory-mcp</code> (cobertura limpia en los archivos citados). Fuente pedagógica:
+  <code>docs/estructura-rag-logs.md</code>.</p>
+</footer>
+
+</div>
+
+<script>
+  // Tabs
+  const tabBtns = document.querySelectorAll('.tabs button');
+  tabBtns.forEach(b => b.addEventListener('click', () => {
+    tabBtns.forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.level').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.lvl).classList.add('active');
+  }));
+
+  // Pipeline revelado
+  const steps = document.querySelectorAll('.step');
+  let cur = 1; // paso 0 encendido
+  const prog = document.getElementById('prog');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  function render(){
+    steps.forEach((s,i)=>s.classList.toggle('on', i<cur));
+    prog.style.width = (cur/steps.length*100)+'%';
+    prev.disabled = cur<=1;
+    next.disabled = cur>=steps.length;
+  }
+  prev.addEventListener('click',()=>{ if(cur>1){cur--;render();} });
+  next.addEventListener('click',()=>{ if(cur<steps.length){cur++;render();} });
+  render();
+
+  // Quiz
+  const feed = {
+    "0": "La traza NO es una línea cruda ni el embedding: es el expediente cronológico de un trace_id con su resumen narrativo (build_summary). Ese resumen es lo que se vectoriza y consulta.",
+    "1": "El vector (coseno sobre traces.embedding) responde lo parecido; el grafo (CAUSED_BY vía causal_chain) responde la causa en orden temporal. Por eso es 'híbrido'.",
+    "2": "_worst_quality() hace que gane el PEOR: un solo reparado degrada toda la traza. Y si toda la causalidad es inferida, baja a 'repaired' (_resolved_caused_by).",
+    "3": "NoneProvider es el fallback determinista que devuelve el contexto etiquetado sin API key. Garantiza local-first: el sistema responde siempre, aunque no haya LLM.",
+    "4": "hybrid_log_search captura la excepción del grafo y devuelve las trazas con cadena vacía. La búsqueda semántica sigue sola: degradación segura."
+  };
+  let score = 0, answered = new Set();
+  document.querySelectorAll('.quiz').forEach(q => {
+    const opts = q.querySelectorAll('.opt');
+    opts.forEach(o => o.addEventListener('click', () => {
+      if (answered.has(q.dataset.q)) return;
+      answered.add(q.dataset.q);
+      opts.forEach(x => x.disabled = true);
+      const fb = q.querySelector('.feedback');
+      fb.classList.add('show');
+      if (o.dataset.correct) {
+        o.classList.add('correct');
+        fb.classList.add('ok');
+        score++;
+      } else {
+        o.classList.add('wrong');
+        opts.forEach(x => { if(x.dataset.correct) x.classList.add('correct'); });
+        fb.classList.add('no');
+      }
+      fb.textContent = feed[q.dataset.q];
+      document.getElementById('score').textContent = score;
+    }));
+  });
+</script>
+</body>
+</html>

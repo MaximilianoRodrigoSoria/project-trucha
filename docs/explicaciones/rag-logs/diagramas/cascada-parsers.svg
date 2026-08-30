@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="420" viewBox="0 0 760 420" font-family="system-ui,Segoe UI,sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#9aa3c7"/>
+    </marker>
+  </defs>
+  <rect width="760" height="420" fill="#0f1220"/>
+  <text x="380" y="32" fill="#e8eaf6" font-size="18" font-weight="bold" text-anchor="middle">Paso 0 · Cascada de parsers (parse_line)</text>
+  <text x="380" y="54" fill="#9aa3c7" font-size="12" text-anchor="middle">En orden: primero el limpio, último el genérico · si nada matchea, la línea se descarta</text>
+
+  <!-- entrada -->
+  <rect x="300" y="78" width="160" height="40" rx="8" fill="#7c5cff"/>
+  <text x="380" y="103" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">línea cruda</text>
+
+  <!-- parsers en cascada -->
+  <g font-size="13">
+    <rect x="250" y="140" width="260" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="162" fill="#e8eaf6" text-anchor="middle" font-weight="bold">1. json.loads → clean</text>
+    <rect x="270" y="184" width="220" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="206" fill="#e8eaf6" text-anchor="middle" font-weight="bold">2. SLOPPY_RE (comillas simples)</text>
+    <rect x="270" y="228" width="220" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="250" fill="#e8eaf6" text-anchor="middle" font-weight="bold">3. BARE_RE ([LEVEL] svc :: msg)</text>
+    <rect x="270" y="272" width="220" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="294" fill="#e8eaf6" text-anchor="middle" font-weight="bold">4. STACK_RE (stack trace pegado)</text>
+    <rect x="270" y="316" width="220" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="338" fill="#e8eaf6" text-anchor="middle" font-weight="bold">5. SYSLOG_RE (ts host svc[pid])</text>
+    <rect x="270" y="360" width="220" height="34" rx="7" fill="#222842" stroke="#2c3357"/>
+    <text x="380" y="382" fill="#e8eaf6" text-anchor="middle" font-weight="bold">6. _from_logfmt → logfmt</text>
+  </g>
+
+  <line x1="300" y1="118" x2="300" y2="140" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="380" y1="174" x2="380" y2="184" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="380" y1="218" x2="380" y2="228" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="380" y1="262" x2="380" y2="272" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="380" y1="306" x2="380" y2="316" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="380" y1="350" x2="380" y2="360" stroke="#9aa3c7" stroke-width="2" marker-end="url(#ar)"/>
+
+  <text x="590" y="156" fill="#f5b84b" font-size="12" text-anchor="middle">ningún parser →</text>
+  <text x="590" y="176" fill="#ff6b6b" font-size="12" font-weight="bold" text-anchor="middle">linea descartada (None)</text>
+</svg>
