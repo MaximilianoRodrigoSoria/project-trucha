@@ -53,3 +53,6 @@ Thumbs.db
 
 # ---- comittero (scratch: notas por rama) ----
 .comittero/
+
+# ---- Otros ----
+files/
