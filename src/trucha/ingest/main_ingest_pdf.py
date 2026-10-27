@@ -1,9 +1,12 @@
 """Pipeline de carga de PDFs a BD de Vectorial e indexación."""
-from email.mime import text
+
+import logging
 from pathlib import Path
-import pypdf
-from trucha.core.settings import settings
+
+from trucha.config.settings import settings
 from trucha.ingest.normalice_pdf_vector_search import main_nomalice_vector_search
+
+logger = logging.getLogger(__name__)
 
 def validate_hash(file_path: str) -> bool:
     """
@@ -17,45 +20,21 @@ def validate_hash(file_path: str) -> bool:
     """
     pass
 
-def read_pdf(file_path: str) -> str:
-    """
-    Lee el contenido de un archivo PDF y devuelve el texto extraído.
-
-    Args:
-        file_path (str): Ruta del archivo PDF a leer.
-
-    Returns:
-        str: Texto extraído del PDF.
-    """
-    try:
-        with open(file_path, "rb") as f:
-            pdf = pypdf.PdfReader(f)
-
-            # Metadatos
-            num_paginas = len(pdf.pages)
-
-            contenido_texto = []
-            for page_num in range(num_paginas):
-                contenido_texto.append("Pagina nro: " + str(page_num + 1 ) + "\n")
-                texto = pdf.pages[page_num].extract_text()
-
-                contenido_texto.append(texto.strip())
-
-            text = "\n".join(contenido_texto)
-
-        return text
-    except Exception as e:
-        return f"Error al leer el PDF: {e}"
-
 def main_ingest_pdf_pipeline():
     # Obtenemos los PDFs en al ruta dentro del proyecto
     project_root = Path(__file__).resolve().parents[3]
+
+    logger.debug(f"Ruta del proyecto: {project_root}")
+    logger.debug(f"Ruta de PDFs: {Path(settings.pdf_path)}")
+
     pdf_directory = project_root / Path(settings.pdf_path)
     pdf_files = list(pdf_directory.glob("*.pdf"))
-    
+
+    logger.info(f"Se encontraron {len(pdf_files)} archivos PDF en la ruta: {pdf_directory}")
     # Ejecutamos el pipeline de ingestión para cada PDF
     for pdf_file in pdf_files:
-        main_nomalice_vector_search(pdf_file, root_path=pdf_directory)
+        main_nomalice_vector_search(pdf_file, root_path=project_root)
 
 if __name__ == "__main__":
+    logger.info("Iniciando pipeline de ingestión de PDFs...")
     main_ingest_pdf_pipeline()
