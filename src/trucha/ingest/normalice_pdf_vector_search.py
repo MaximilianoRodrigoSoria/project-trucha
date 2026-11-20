@@ -10,6 +10,7 @@ import pypdf
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling_core.types.doc import TextItem
 from docling.datamodel.pipeline_options import (
     PdfPipelineOptions,
     TableStructureOptions,
