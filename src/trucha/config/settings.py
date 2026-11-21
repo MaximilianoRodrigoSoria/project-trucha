@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     pdf_path: str = "/files/input-pdf"
     md_path: str = "/files/md-files"
 
+    # Logging
+    log_level: str = "DEBUG"
+
     model_config = SettingsConfigDict(
         env_file= ".env",
         case_sensitive=False

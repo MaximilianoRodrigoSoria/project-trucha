@@ -3,6 +3,7 @@ import logging
 import re
 
 from pathlib import Path
+
 from trucha.config.settings import settings
 
 import pypdf
@@ -42,93 +43,53 @@ def _generate_pipeline_pdf_options() -> PdfPipelineOptions:
         )
     )
 
-def _read_pdf_with_pypdf(file_path: str) -> str:
+def _pertenece_a_misma_fila(etiqueta: TextItem, valor: TextItem, tolerancia: float = 2.0) -> bool:
     """
-    Lee el contenido de un archivo PDF y devuelve el texto extraído.
-    Leemos con Pypdf porque con docling se genera un problema con la separacion entre texto que lo concidera como dos bloques de texto y son dos parrafos disntintos, cosa que no ocurre con PyPDF.
+    Determina si dos items estan en la misma fila de la pagina usando un margen de tolerancia para la coordenada
 
     Args:
-        file_path (str): Ruta del archivo PDF a leer.
+        etiqueta: El item que representa una etiqueta
+        valor: El item con el texto a concatenar a la etiqueta
+        tol: La tolerancia para considerar que dos items estan en la misma fila
 
     Returns:
-        str: Texto extraído del PDF.
+        bool: True si los items estan en la misma fila, False de lo contrario
     """
-    try:
-        with open(file_path, "rb") as f:
-            pdf = pypdf.PdfReader(f)
+    return abs(etiqueta.prov[0].bbox.t - valor.prov[0].bbox.t) < tolerancia
 
-            # Metadatos
-            num_paginas = len(pdf.pages)
-
-            contenido_texto = []
-            for page_num in range(num_paginas):
-                contenido_texto.append("Pagina nro: " + str(page_num + 1 ) + "\n")
-                texto = pdf.pages[page_num].extract_text()
-
-                contenido_texto.append(texto.strip())
-
-            text = " ".join(contenido_texto)
-
-        logger.info(f"Se leyó el PDF: {file_path} con éxito. Número de páginas: {num_paginas}")
-        return text
-    except Exception as e:
-        logger.error(f"Error al leer el PDF: {e}")
-        return f"Error al leer el PDF: {e}"
-
-def _eliminar_saltos_de_linea(texto: str) -> str:
-    """
-    Elimina los saltos de línea innecesarios en un texto que se genera en la seccion 'CONTRATO DE OBRA', manteniendo la coherencia del contenido.
-    Args:
-        texto (str): Texto original con posibles saltos de línea.
-    Returns:
-        str: Texto sin saltos de línea innecesarios.
-    """
-    patron = r"(?ms)(^Obra:(.*?)^Fecha de firma:\n(.*?)\n)"
-    
-    resultado = re.search(patron, texto)
-    substring = resultado.group(1).strip()
-
-    # Reeplazamos los saltos de linea que se encuentra dentro del substring del patron
-    substring_modficado = substring.replace(":\n", ": ")
-
-    return substring_modficado
-
-def _arreglar_seccion_contrato_de_obra(texto_docling: str, pdf_path: str) -> str:
+def _docling_arreglar_seccion_contrato_de_obra(doc: DocumentConverter) -> None:
     """
     Arregla el contenido del texto que se encuentra en la sección 'CONTRATO DE OBRA' de un PDF, asegurando que la información esté correctamente formateada y sea coherente.
 
     Args:
-        texto_docling (str): Texto original extraído del PDF con Docling.
-        pdf_path (str): Ruta al archivo PDF.
+        doc (DocumentConverter): Documento convertido con Docling.
+    
     Returns:
-        str: Texto con la sección 'CONTRATO DE OBRA' arreglada.
+        None: Modifica el documento en su lugar.
     """
-    # PREPARACION DE LA CORRECCION
-    texto_pypdf = _read_pdf_with_pypdf(pdf_path)    
-    texto_pypdf_modficiado = _eliminar_saltos_de_linea(texto_pypdf)
 
-    # REALIZANDO CORRECCION
-    # Seleccion del error
-    patron_texto_docling = r"(?ms)(^Obra:(.*?))^## Cláusula Primera – Objeto"
-    resultado_docling = re.search(patron_texto_docling, texto_docling)
-    texto_erroneo_docling = resultado_docling.group(1).strip()
-    texto_docling_corregido = texto_docling.replace(texto_erroneo_docling, texto_pypdf_modficiado)
+    # Tomo todos los items
+    items = [it for it, _ in doc.iterate_items()
+            if isinstance(it, TextItem) and it.prov]
 
-    return texto_docling_corregido.strip()
+    # Ordenamos los items de mayor a menos que seria del mas arriba a mas abajo en la pagina
+    items.sort(key=lambda x: -x.prov[0].bbox.t)
 
-def postprocesado_texto(texto: str, pdf_path: str) -> str:
-    """
-    Realiza un postprocesado del texto extraído de un PDF para mejorar su legibilidad y coherencia.
+    # Con esto separamos lo que seria las etiquetas de los valores
+    etiquetas = [i for i in items if i.text.endswith(":")]
+    valores = [i for i in items if not i.text.endswith(":")]
 
-    Args:
-        texto (str): Texto extraído del PDF.
+    # guardamos los valores que fueron usados en esta lista para luego eliminarlos del documento.
+    valores_usados = []
+    for etiqueta in etiquetas:
+        valor = next((v for v in valores if v not in valores_usados and _pertenece_a_misma_fila(etiqueta, v)), None)
+        if valor is None:
+            continue  # etiqueta sin valor: la deja como está
+        etiqueta.text = f"- {etiqueta.text} {valor.text}"
+        valores_usados.append(valor)
 
-    Returns:
-        str: Texto postprocesado.
-    """
-    texto = _arreglar_seccion_contrato_de_obra(texto, pdf_path)
-
-    return texto
+    # Borramos los items que ya fueron usados para concatenar a las etiquetas
+    doc.delete_items(node_items=valores_usados)
 
 def procesar_documento(pdf_path: str) -> str:
     """
@@ -150,13 +111,13 @@ def procesar_documento(pdf_path: str) -> str:
     result = converter.convert(pdf_path)
     doc = result.document
 
+    _docling_arreglar_seccion_contrato_de_obra(doc)
+
     content = doc.export_to_markdown(
         page_break_placeholder="---PAGE BREAK---",
         include_annotations=True,
         mark_annotations=True
     )
-
-    content = postprocesado_texto(content, pdf_path)
 
     return content
 
@@ -177,6 +138,7 @@ def _pipeline_generar_archivo_markdown(pdf_path: Path, root_path: Path = None) -
     logger.info(f"Guardando archivo markdown en: {md_path}")
     md_path.parent.mkdir(parents=True, exist_ok=True)
 
+    
     md_path.write_text(texto_md, encoding="utf-8")
 
     return texto_md   

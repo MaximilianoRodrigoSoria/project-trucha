@@ -6,6 +6,13 @@ from pathlib import Path
 from trucha.config.settings import settings
 from trucha.ingest.normalice_pdf_vector_search import main_nomalice_vector_search
 
+# Configuración del logger
+logging.basicConfig(
+    level= getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+ 
 logger = logging.getLogger(__name__)
 
 def validate_hash(file_path: str) -> bool:
