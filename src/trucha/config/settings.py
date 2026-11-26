@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "DEBUG"
 
+    # Embedding
+    EMBED_MODEL: str = "BAAI/bge-m3"
+    MAX_TOKENS: int = 512
+    BATCH_SIZE: int = 64
+
     model_config = SettingsConfigDict(
         env_file= ".env",
         case_sensitive=False
